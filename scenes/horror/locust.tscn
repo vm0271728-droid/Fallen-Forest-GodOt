@@ -1,0 +1,30 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/horror/locust.gd" id="1_script"]
+
+[sub_resource type="BoxMesh" id="Box_body"]
+size = Vector3(0.95, 4.05, 0.75)
+
+[sub_resource type="StandardMaterial3D" id="Material_body"]
+albedo_color = Color(0.025, 0.022, 0.021, 1)
+roughness = 0.85
+
+[sub_resource type="CapsuleShape3D" id="Capsule_body"]
+radius = 0.52
+height = 4.05
+
+[node name="Locust" type="CharacterBody3D"]
+script = ExtResource("1_script")
+collision_layer = 2
+collision_mask = 1
+
+[node name="Visual" type="Node3D" parent="."]
+
+[node name="BodyMesh" type="MeshInstance3D" parent="Visual"]
+position = Vector3(0, 2.025, 0)
+mesh = SubResource("Box_body")
+material_override = SubResource("Material_body")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+position = Vector3(0, 2.025, 0)
+shape = SubResource("Capsule_body")
