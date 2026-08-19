@@ -1,7 +1,7 @@
 # Fast Godot script validation
 
 - Engine: Godot 4.7.1 stable
-- Tested commit: `e5fde4af9334ed721c039638404d72c7c0b2f769`
+- Tested commit: `1f1ef3b0c80d87ea057336cb8106c56461d04f30`
 - Exit code: `0`
 - Result: **PASS**
 
@@ -33,24 +33,6 @@ SCRIPT ERROR: Parse Error: Assigned value for constant "DOCUMENT_PITCH_DEGREES" 
               [1] _scan_dir (res://tools/fast_validate_scripts.gd:30)
               [2] _initialize (res://tools/fast_validate_scripts.gd:6)
 ERROR: Failed to load script "res://scripts/player/viewmodel_controller.gd" with error "Parse error".
-   at: load (modules/gdscript/gdscript_resource_format.cpp:46)
-   GDScript backtrace (most recent call first):
-       [0] _scan_dir (res://tools/fast_validate_scripts.gd:32)
-       [1] _scan_dir (res://tools/fast_validate_scripts.gd:30)
-       [2] _initialize (res://tools/fast_validate_scripts.gd:6)
-SCRIPT ERROR: Parse Error: Preload file "res://assets/player/flashlight/source/flashlightfbx.fbx" has no resource loaders (unrecognized file extension).
-          at: GDScript::reload (res://scripts/player/flashlight_rig.gd:3)
-          GDScript backtrace (most recent call first):
-              [0] _scan_dir (res://tools/fast_validate_scripts.gd:32)
-              [1] _scan_dir (res://tools/fast_validate_scripts.gd:30)
-              [2] _initialize (res://tools/fast_validate_scripts.gd:6)
-SCRIPT ERROR: Parse Error: Cannot infer the type of "FLASHLIGHT_MODEL" constant because the value doesn't have a set type.
-          at: GDScript::reload (res://scripts/player/flashlight_rig.gd:3)
-          GDScript backtrace (most recent call first):
-              [0] _scan_dir (res://tools/fast_validate_scripts.gd:32)
-              [1] _scan_dir (res://tools/fast_validate_scripts.gd:30)
-              [2] _initialize (res://tools/fast_validate_scripts.gd:6)
-ERROR: Failed to load script "res://scripts/player/flashlight_rig.gd" with error "Parse error".
    at: load (modules/gdscript/gdscript_resource_format.cpp:46)
    GDScript backtrace (most recent call first):
        [0] _scan_dir (res://tools/fast_validate_scripts.gd:32)
