@@ -1,10 +1,11 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/player/player.gd" id="1_player"]
 [ext_resource type="Script" path="res://scripts/player/flashlight_rig.gd" id="2_flashlight"]
 [ext_resource type="PackedScene" path="res://assets/player/arms/source/fpsarms.fbx" id="3_arms"]
 [ext_resource type="PackedScene" path="res://assets/player/flashlight/source/flashlightfbx.fbx" id="4_flashlight_model"]
 [ext_resource type="Script" path="res://scripts/player/viewmodel_controller.gd" id="5_viewmodel"]
+[ext_resource type="PackedScene" path="res://assets/props/documents/source/document_file_folder (1).glb" id="6_document"]
 
 [sub_resource type="CapsuleShape3D" id="Capsule_player"]
 radius = 0.33
@@ -83,3 +84,10 @@ position = Vector3(0.18, -0.15, -0.50)
 
 [node name="CanonicalFlashlight" parent="ViewmodelLayer/ViewmodelContainer/ViewmodelViewport/ViewmodelWorld/FlashlightVisualRoot" instance=ExtResource("4_flashlight_model")]
 rotation_degrees = Vector3(-90, 0, 0)
+
+[node name="DocumentVisualRoot" type="Node3D" parent="ViewmodelLayer/ViewmodelContainer/ViewmodelViewport/ViewmodelWorld"]
+position = Vector3(-0.10, -0.10, -0.62)
+visible = false
+
+[node name="CanonicalDocument" parent="ViewmodelLayer/ViewmodelContainer/ViewmodelViewport/ViewmodelWorld/DocumentVisualRoot" instance=ExtResource("6_document")]
+scale = Vector3(0.07, 0.07, 0.07)
