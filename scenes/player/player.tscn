@@ -1,7 +1,9 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/player/player.gd" id="1_player"]
 [ext_resource type="Script" path="res://scripts/player/flashlight_rig.gd" id="2_flashlight"]
+[ext_resource type="PackedScene" path="res://assets/player/arms/source/fpsarms.fbx" id="3_arms"]
+[ext_resource type="PackedScene" path="res://assets/player/flashlight/source/flashlightfbx.fbx" id="4_flashlight_model"]
 
 [sub_resource type="CapsuleShape3D" id="Capsule_player"]
 radius = 0.33
@@ -24,11 +26,20 @@ fov = 75.0
 near = 0.05
 far = 105.0
 
+[node name="ViewmodelRoot" type="Node3D" parent="Head/Camera3D"]
+position = Vector3(0, -0.18, -0.38)
+
+[node name="CanonicalArms" parent="Head/Camera3D/ViewmodelRoot" instance=ExtResource("3_arms")]
+
 [node name="FlashlightRig" type="Node3D" parent="Head/Camera3D"]
-position = Vector3(0.08, -0.07, 0.12)
+position = Vector3(0.18, -0.15, -0.38)
 script = ExtResource("2_flashlight")
 
+[node name="CanonicalFlashlight" parent="Head/Camera3D/FlashlightRig" instance=ExtResource("4_flashlight_model")]
+rotation_degrees = Vector3(-90, 0, 0)
+
 [node name="SpotLight3D" type="SpotLight3D" parent="Head/Camera3D/FlashlightRig"]
+position = Vector3(0, 0, -0.20)
 visible = false
 light_color = Color(0.91, 0.94, 0.98, 1)
 light_energy = 5.0
