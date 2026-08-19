@@ -8,19 +8,25 @@ extends Node3D
 @export var candidate_count := 240
 @export var maximum_slope_degrees := 24.0
 @export var tree_clearance := 1.6
+@export var trail_extra_clearance := 2.0
 @export var terrain_path: NodePath
 @export var forest_path: NodePath
+@export var trail_path: NodePath
 
 var _terrain: Node
 var _forest: Node
+var _trails: Node
 
 func _ready() -> void:
 	_terrain = get_node_or_null(terrain_path)
 	_forest = get_node_or_null(forest_path)
+	_trails = get_node_or_null(trail_path)
 	if _terrain == null and get_parent() != null:
 		_terrain = get_parent().get_node_or_null("Terrain")
 	if _forest == null and get_parent() != null:
 		_forest = get_parent().get_node_or_null("ForestBlockout")
+	if _trails == null and get_parent() != null:
+		_trails = get_parent().get_node_or_null("TrailNetwork")
 	spawn_documents()
 
 func spawn_documents() -> void:
@@ -37,6 +43,9 @@ func spawn_documents() -> void:
 		var z := rng.randf_range(-world_half_extent, world_half_extent)
 		if Vector2(x, z).length() < minimum_from_start:
 			continue
+		if _trails != null and _trails.has_method("is_in_trail_clearance"):
+			if bool(_trails.call("is_in_trail_clearance", x, z, trail_extra_clearance)):
+				continue
 
 		var y := 0.03
 		if _terrain != null and _terrain.has_method("sample_height"):
