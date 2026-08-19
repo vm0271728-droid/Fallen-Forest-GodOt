@@ -40,9 +40,6 @@ LOW_POLY_SOURCE_FILES = {
     "Tree_Pack.mtl",
 }
 
-# The low-poly archive also contains rocks/ground and the scene itself contains
-# non-tree vegetation. We only retain tree material textures here. Grass/bush
-# mesh filtering is performed after Godot import using node names from the report.
 LOW_POLY_TREE_TEXTURE_FOLDERS = {
     "TREES_HIGH_POLY",
     "TREES_LOW_POLY",
@@ -105,6 +102,75 @@ def import_black_spruce(outer: zipfile.ZipFile) -> None:
             safe_extract_zip(source_zip, destination)
 
 
+def _remap_obj_face_token(token: str, offsets: tuple[int, int, int]) -> str:
+    pieces = token.split("/")
+    result: list[str] = []
+    for index, piece in enumerate(pieces):
+        if not piece:
+            result.append("")
+            continue
+        value = int(piece)
+        if value > 0:
+            value -= offsets[min(index, 2)]
+        result.append(str(value))
+    return "/".join(result)
+
+
+def split_sequential_obj_objects(source_obj: Path, destination: Path) -> list[str]:
+    """Split this pack's sequential OBJ objects into independent OBJ resources.
+
+    The supplied `firs.obj` stores fir_1..fir_4 sequentially: each object defines
+    its own vertices/UVs/normals, while face indices remain global. Streaming the
+    file and subtracting per-object offsets preserves geometry without loading the
+    high-poly mesh into a geometry library or rewriting the original source file.
+    """
+    reset_dir(destination)
+    global_counts = [0, 0, 0]  # v, vt, vn
+    offsets = (0, 0, 0)
+    output = None
+    names: list[str] = []
+
+    try:
+        with source_obj.open("r", encoding="utf-8", errors="ignore") as src:
+            for raw_line in src:
+                line = raw_line.rstrip("\n")
+                if line.startswith("o "):
+                    if output is not None:
+                        output.close()
+                    object_name = line[2:].strip()
+                    safe_name = "".join(c if c.isalnum() or c in "_-" else "_" for c in object_name)
+                    names.append(safe_name)
+                    output = (destination / f"{safe_name}.obj").open("w", encoding="utf-8")
+                    output.write("mtllib ../firs.mtl\n")
+                    output.write(f"o {safe_name}\n")
+                    offsets = tuple(global_counts)
+                    continue
+
+                if line.startswith("v "):
+                    global_counts[0] += 1
+                elif line.startswith("vt "):
+                    global_counts[1] += 1
+                elif line.startswith("vn "):
+                    global_counts[2] += 1
+
+                if output is None:
+                    continue
+
+                if line.startswith("f "):
+                    tokens = line.split()
+                    remapped = [_remap_obj_face_token(token, offsets) for token in tokens[1:]]
+                    output.write("f " + " ".join(remapped) + "\n")
+                elif not line.startswith("mtllib "):
+                    output.write(line + "\n")
+    finally:
+        if output is not None:
+            output.close()
+
+    if names != ["fir_1", "fir_3", "fir_2", "fir_4"]:
+        raise RuntimeError(f"Unexpected dead-fir object layout: {names}")
+    return names
+
+
 def import_dead_firs(outer: zipfile.ZipFile) -> None:
     destination = ASSETS / "environment" / "trees" / "dead_firs"
     reset_dir(destination)
@@ -113,6 +179,8 @@ def import_dead_firs(outer: zipfile.ZipFile) -> None:
         source_data = pack.read("source/firs.zip")
         with zipfile.ZipFile(io.BytesIO(source_data)) as source_zip:
             safe_extract_zip(source_zip, destination)
+    names = split_sequential_obj_objects(destination / "firs.obj", destination / "variants")
+    print(f"Split dead-fir pack into {len(names)} variants: {', '.join(names)}")
 
 
 def import_low_poly_tree_pack(outer: zipfile.ZipFile) -> None:
@@ -182,7 +250,9 @@ def write_manifest() -> None:
         "",
         "## Tree-pack rule",
         "",
-        "The tree archives are packs, not single-tree assets. Their imported scenes must be inspected and split/selected as individual tree variants before runtime scattering.",
+        "The tree archives are packs, not single-tree assets. Runtime forest scattering uses individual mesh variants, not the whole pack as one prop.",
+        "",
+        "The dead-fir source is deterministically split into `fir_1`, `fir_2`, `fir_3`, and `fir_4` OBJ variants without modifying the canonical original OBJ.",
         "",
         "`low_poly_pack` is tree-only for Fallen Forest: grass, bushes, rocks and ground assets from that pack are not gameplay assets and must not be instantiated. Only tree source files and tree material textures are retained by the importer.",
         "",
