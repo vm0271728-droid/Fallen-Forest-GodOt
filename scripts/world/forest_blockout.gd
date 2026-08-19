@@ -5,11 +5,19 @@ extends MultiMeshInstance3D
 @export var start_clear_radius := 18.0
 @export var min_scale := 0.80
 @export var max_scale := 1.35
+@export var terrain_path: NodePath
+
+var tree_positions := PackedVector3Array()
+var _terrain: Node
 
 func _ready() -> void:
+	_terrain = get_node_or_null(terrain_path)
+	if _terrain == null and get_parent() != null:
+		_terrain = get_parent().get_node_or_null("Terrain")
 	build_forest()
 
 func build_forest() -> void:
+	tree_positions.clear()
 	var trunk := CylinderMesh.new()
 	trunk.top_radius = 0.18
 	trunk.bottom_radius = 0.28
@@ -45,12 +53,30 @@ func build_forest() -> void:
 			continue
 
 		var scale := rng.randf_range(min_scale, max_scale)
+		var height_scale := rng.randf_range(0.9, 1.2) * scale
+		var ground_y := 0.0
+		if _terrain != null and _terrain.has_method("sample_height"):
+			ground_y = float(_terrain.call("sample_height", x, z))
+
 		var basis := Basis(Vector3.UP, rng.randf_range(0.0, TAU))
-		basis = basis.scaled(Vector3(scale, rng.randf_range(0.9, 1.2) * scale, scale))
-		var transform := Transform3D(basis, Vector3(x, 3.5 * scale, z))
-		mm.set_instance_transform(placed, transform)
+		basis = basis.scaled(Vector3(scale, height_scale, scale))
+		var origin := Vector3(x, ground_y + 3.5 * height_scale, z)
+		mm.set_instance_transform(placed, Transform3D(basis, origin))
+		tree_positions.append(Vector3(x, ground_y, z))
 		placed += 1
 
 	mm.instance_count = placed
 	multimesh = mm
 	print("Fallen Forest blockout: %d trees generated with MultiMesh." % placed)
+
+func find_cover_near(player_position: Vector3, minimum_distance: float, maximum_distance: float, rng: RandomNumberGenerator) -> Vector3:
+	if tree_positions.is_empty():
+		return Vector3.INF
+	var candidates: Array[Vector3] = []
+	for position in tree_positions:
+		var distance := Vector2(position.x - player_position.x, position.z - player_position.z).length()
+		if distance >= minimum_distance and distance <= maximum_distance:
+			candidates.append(position)
+	if candidates.is_empty():
+		return Vector3.INF
+	return candidates[rng.randi_range(0, candidates.size() - 1)]
