@@ -1,0 +1,64 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/main/main.gd" id="1_main"]
+[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="2_player"]
+[ext_resource type="Script" path="res://scripts/input/mobile_controls.gd" id="3_mobile"]
+
+[sub_resource type="Environment" id="Environment_forest"]
+background_mode = 1
+background_color = Color(0.002, 0.003, 0.004, 1)
+background_energy_multiplier = 0.35
+fog_enabled = true
+fog_light_color = Color(0.006, 0.008, 0.011, 1)
+fog_light_energy = 0.25
+fog_density = 0.012
+fog_height = 0.0
+fog_height_density = 0.08
+
+[sub_resource type="BoxMesh" id="BoxMesh_ground"]
+size = Vector3(720, 0.2, 720)
+
+[sub_resource type="StandardMaterial3D" id="Ground_material"]
+albedo_color = Color(0.018, 0.028, 0.018, 1)
+roughness = 1.0
+
+[sub_resource type="BoxShape3D" id="BoxShape_ground"]
+size = Vector3(720, 0.2, 720)
+
+[node name="Main" type="Node3D"]
+script = ExtResource("1_main")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_forest")
+
+[node name="Moon" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(-61, -29, 0)
+light_color = Color(0.48, 0.57, 0.72, 1)
+light_energy = 0.08
+shadow_enabled = true
+
+[node name="Ground" type="StaticBody3D" parent="."]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Ground"]
+position = Vector3(0, -0.1, 0)
+mesh = SubResource("BoxMesh_ground")
+material_override = SubResource("Ground_material")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Ground"]
+position = Vector3(0, -0.1, 0)
+shape = SubResource("BoxShape_ground")
+
+[node name="Player" parent="." instance=ExtResource("2_player")]
+position = Vector3(0, 0.05, 0)
+
+[node name="MobileUI" type="CanvasLayer" parent="."]
+layer = 20
+
+[node name="MobileControls" type="Control" parent="MobileUI"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("3_mobile")
