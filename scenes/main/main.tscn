@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3]
+[gd_scene load_steps=15 format=3]
 
 [ext_resource type="Script" path="res://scripts/main/main.gd" id="1_main"]
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="2_player"]
@@ -12,6 +12,8 @@
 [ext_resource type="Script" path="res://scripts/horror/event_director.gd" id="10_horror"]
 [ext_resource type="PackedScene" path="res://scenes/horror/locust.tscn" id="11_locust"]
 [ext_resource type="PackedScene" path="res://scenes/horror/boiled_one.tscn" id="12_boiled"]
+[ext_resource type="Script" path="res://scripts/world/forest_boundary.gd" id="13_boundary"]
+[ext_resource type="Script" path="res://scripts/cinematics/ending_controller.gd" id="14_ending"]
 
 [sub_resource type="Environment" id="Environment_forest"]
 background_mode = 1
@@ -64,6 +66,16 @@ terrain_path = NodePath("../Terrain")
 forest_path = NodePath("../ForestBlockout")
 locust_scene = ExtResource("11_locust")
 boiled_scene = ExtResource("12_boiled")
+
+[node name="ForestBoundary" type="Node3D" parent="."]
+script = ExtResource("13_boundary")
+player_path = NodePath("../Player")
+
+[node name="EndingController" type="Node3D" parent="."]
+script = ExtResource("14_ending")
+boundary_path = NodePath("../ForestBoundary")
+terrain_path = NodePath("../Terrain")
+player_path = NodePath("../Player")
 
 [node name="HUD" type="CanvasLayer" parent="."]
 layer = 15
