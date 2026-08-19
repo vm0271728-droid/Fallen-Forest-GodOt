@@ -1,5 +1,5 @@
 name: Import canonical Drive assets
-# Import trigger revision: 1
+# Import trigger revision: 2
 
 on:
   workflow_dispatch:
@@ -21,8 +21,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install Drive downloader
-        run: python -m pip install --disable-pip-version-check gdown
+      - name: Install import dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y p7zip-full
+          python -m pip install --disable-pip-version-check gdown
 
       - name: Download canonical owner archives
         run: |
@@ -35,10 +38,15 @@ jobs:
             --all /tmp/fallen_forest_all.zip \
             --trees /tmp/fallen_forest_trees.zip
 
-      - name: Verify forbidden screamer is absent
+      - name: Verify canonical exclusions
         run: |
           if find assets -type f -iname '*amazing-grace*' | grep -q .; then
             echo 'Forbidden Amazing Grace asset was imported.' >&2
+            exit 1
+          fi
+          if find assets/environment/trees/low_poly_pack -type f \
+            \( -iname 'ROCKS_*' -o -iname 'internal_ground_ao_texture*' \) | grep -q .; then
+            echo 'Non-tree low-poly pack payload was retained unexpectedly.' >&2
             exit 1
           fi
 
@@ -46,10 +54,10 @@ jobs:
         run: |
           git config user.name "Fallen Forest Asset Importer"
           git config user.email "actions@users.noreply.github.com"
-          git add assets docs/ASSET_INVENTORY.md
+          git add -A assets docs/ASSET_INVENTORY.md
           if git diff --cached --quiet; then
             echo "No asset changes to commit."
             exit 0
           fi
-          git commit -m "Import canonical source assets from project Drive"
+          git commit -m "Expand canonical tree packs and keep tree-only low-poly assets"
           git push origin HEAD:main
