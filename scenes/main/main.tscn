@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=3]
+[gd_scene load_steps=18 format=3]
 
 [ext_resource type="Script" path="res://scripts/main/main.gd" id="1_main"]
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="2_player"]
@@ -16,6 +16,7 @@
 [ext_resource type="Script" path="res://scripts/cinematics/ending_controller.gd" id="14_ending"]
 [ext_resource type="PackedScene" path="res://scenes/vehicles/finale_pickup.tscn" id="15_pickup"]
 [ext_resource type="Script" path="res://scripts/world/grass_scatterer.gd" id="16_grass"]
+[ext_resource type="Script" path="res://scripts/world/trail_network.gd" id="17_trails"]
 
 [sub_resource type="Environment" id="Environment_forest"]
 background_mode = 1
@@ -42,6 +43,10 @@ shadow_enabled = true
 
 [node name="Terrain" parent="." instance=ExtResource("4_terrain")]
 
+[node name="TrailNetwork" type="Node3D" parent="."]
+script = ExtResource("17_trails")
+terrain_path = NodePath("../Terrain")
+
 [node name="ForestBlockout" type="MultiMeshInstance3D" parent="."]
 script = ExtResource("5_forest")
 terrain_path = NodePath("../Terrain")
@@ -51,10 +56,12 @@ script = ExtResource("6_docs")
 document_scene = ExtResource("7_doc_scene")
 terrain_path = NodePath("../Terrain")
 forest_path = NodePath("../ForestBlockout")
+trail_path = NodePath("../TrailNetwork")
 
 [node name="GrassSystem" type="Node3D" parent="."]
 script = ExtResource("16_grass")
 terrain_path = NodePath("../Terrain")
+trail_path = NodePath("../TrailNetwork")
 
 [node name="Player" parent="." instance=ExtResource("2_player")]
 position = Vector3(0, 0.05, 0)
