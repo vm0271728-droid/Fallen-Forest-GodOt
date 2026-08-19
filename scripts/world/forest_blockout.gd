@@ -38,11 +38,11 @@ func build_forest() -> void:
 	tree_positions.clear()
 
 	var variants: Array[Dictionary] = []
-	variants.append_array(_load_pack_variants(SPRUCE_PATH, "spruce"))
+	variants.append_array(_load_simple_variants(SPRUCE_PATH, "spruce"))
 	for dead_path: String in DEAD_FIR_VARIANT_PATHS:
-		variants.append_array(_load_pack_variants(dead_path, "dead_fir"))
+		variants.append_array(_load_simple_variants(dead_path, "dead_fir"))
 	if ResourceLoader.exists(LOW_POLY_PATH):
-		variants.append_array(_load_pack_variants(LOW_POLY_PATH, "low_poly"))
+		variants.append_array(_load_low_poly_variants(LOW_POLY_PATH))
 
 	if variants.is_empty():
 		push_error("Fallen Forest: no canonical tree variants could be imported.")
@@ -50,7 +50,7 @@ func build_forest() -> void:
 
 	var pack_counts := _count_variants_by_pack(variants)
 	var pack_weights := _effective_pack_weights(pack_counts)
-	var transforms_by_variant: Array[Array] = []
+	var transforms_by_variant: Array = []
 	transforms_by_variant.resize(variants.size())
 	for i in variants.size():
 		transforms_by_variant[i] = []
@@ -85,99 +85,177 @@ func build_forest() -> void:
 			ground_y = float(_terrain.call("sample_height", x, z))
 
 		var desired_height := _desired_height_for_pack(pack, rng)
-		var source_height := maxf(0.2, float(variant.get("height", 5.0)))
+		var source_height := maxf(0.2, float(variant["height"]))
 		var uniform_scale := desired_height / source_height
 		var horizontal_scale := uniform_scale * rng.randf_range(0.92, 1.08)
 		var vertical_scale := uniform_scale * rng.randf_range(0.96, 1.05)
 		var placement_basis := Basis(Vector3.UP, rng.randf_range(0.0, TAU))
 		placement_basis = placement_basis.scaled(Vector3(horizontal_scale, vertical_scale, horizontal_scale))
 		var placement := Transform3D(placement_basis, Vector3(x, ground_y, z))
-		var source_transform: Transform3D = variant["transform"]
-		transforms_by_variant[variant_index].append(placement * source_transform)
+		transforms_by_variant[variant_index].append(placement)
 		tree_positions.append(Vector3(x, ground_y, z))
 		placed += 1
 
-	for index in variants.size():
-		var transforms: Array = transforms_by_variant[index]
-		if transforms.is_empty():
+	for variant_index in variants.size():
+		var placements: Array = transforms_by_variant[variant_index]
+		if placements.is_empty():
 			continue
-		var variant: Dictionary = variants[index]
-		var mm := MultiMesh.new()
-		mm.transform_format = MultiMesh.TRANSFORM_3D
-		mm.instance_count = transforms.size()
-		mm.mesh = variant["mesh"] as Mesh
-		for transform_index in transforms.size():
-			mm.set_instance_transform(transform_index, transforms[transform_index])
-		var instance := MultiMeshInstance3D.new()
-		instance.name = "Trees_%s_%s" % [str(variant["pack"]), _safe_name(str(variant["name"]))]
-		instance.multimesh = mm
-		add_child(instance)
+		var variant: Dictionary = variants[variant_index]
+		var components: Array = variant["components"]
+		for component_index in components.size():
+			var component: Dictionary = components[component_index]
+			var mm := MultiMesh.new()
+			mm.transform_format = MultiMesh.TRANSFORM_3D
+			mm.instance_count = placements.size()
+			mm.mesh = component["mesh"] as Mesh
+			var component_transform: Transform3D = component["transform"]
+			for transform_index in placements.size():
+				var placement: Transform3D = placements[transform_index]
+				mm.set_instance_transform(transform_index, placement * component_transform)
+			var instance := MultiMeshInstance3D.new()
+			instance.name = "Trees_%s_%s_C%02d" % [str(variant["pack"]), _safe_name(str(variant["name"])), component_index]
+			instance.multimesh = mm
+			add_child(instance)
 
-	print("Fallen Forest: %d trees generated from %d canonical variants (%s)." % [placed, variants.size(), _pack_summary(variants, transforms_by_variant)])
+	print("Fallen Forest: %d trees generated from %d canonical logical variants (%s)." % [placed, variants.size(), _pack_summary(variants, transforms_by_variant)])
 
-func _load_pack_variants(path: String, pack: String) -> Array[Dictionary]:
+func _load_simple_variants(path: String, pack: String) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 	if not ResourceLoader.exists(path):
 		return result
 	var resource := ResourceLoader.load(path)
 	if resource is PackedScene:
 		var root := (resource as PackedScene).instantiate()
-		_collect_pack_meshes(root, Transform3D.IDENTITY, pack, result)
+		var components: Array[Dictionary] = []
+		_collect_components(root, Transform3D.IDENTITY, components, false)
 		root.free()
+		for component: Dictionary in components:
+			var component_list: Array = [component]
+			result.append(_make_variant(pack, str(component["name"]), component_list))
 	elif resource is Mesh:
 		var mesh := resource as Mesh
-		if _mesh_allowed(pack, path.get_file().get_basename()):
-			var normalized := _normalized_source_transform(mesh, Transform3D.IDENTITY)
-			result.append({
-				"pack": pack,
-				"name": path.get_file().get_basename(),
-				"mesh": mesh,
-				"transform": normalized["transform"],
-				"height": normalized["height"],
-			})
+		var component := {
+			"name": path.get_file().get_basename(),
+			"mesh": mesh,
+			"source_transform": Transform3D.IDENTITY,
+		}
+		var component_list: Array = [component]
+		result.append(_make_variant(pack, path.get_file().get_basename(), component_list))
 	return result
 
-func _collect_pack_meshes(node: Node, parent_transform: Transform3D, pack: String, result: Array[Dictionary]) -> void:
+func _load_low_poly_variants(path: String) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	var resource := ResourceLoader.load(path)
+	if not resource is PackedScene:
+		return result
+	var root := (resource as PackedScene).instantiate()
+	var raw: Array[Dictionary] = []
+	_collect_components(root, Transform3D.IDENTITY, raw, true)
+	root.free()
+
+	var trunks: Array[Dictionary] = []
+	var branches: Array[Dictionary] = []
+	var standalones: Array[Dictionary] = []
+	for component: Dictionary in raw:
+		var lower := str(component["name"]).to_lower()
+		if lower.begins_with("background_tree_atlas"):
+			standalones.append(component)
+		elif "trunk" in lower:
+			trunks.append(component)
+		elif "branch" in lower:
+			branches.append(component)
+
+	# Background_Tree_Atlas.* objects are complete lightweight trees.
+	for standalone: Dictionary in standalones:
+		var component_list: Array = [standalone]
+		result.append(_make_variant("low_poly", str(standalone["name"]), component_list))
+
+	# Main detailed trees are split into trunk + branch meshes in the pack. Pair
+	# them by source-space X/Z center so they are always scattered as one tree.
+	var used_branches := {}
+	for trunk: Dictionary in trunks:
+		var trunk_center: Vector3 = _component_world_center(trunk)
+		var best_index := -1
+		var best_distance := INF
+		for branch_index in branches.size():
+			if used_branches.has(branch_index):
+				continue
+			var branch_center: Vector3 = _component_world_center(branches[branch_index])
+			var flat_distance := Vector2(trunk_center.x - branch_center.x, trunk_center.z - branch_center.z).length()
+			if flat_distance < best_distance:
+				best_distance = flat_distance
+				best_index = branch_index
+		if best_index >= 0 and best_distance <= 5.5:
+			used_branches[best_index] = true
+			var pair: Array = [trunk, branches[best_index]]
+			result.append(_make_variant("low_poly", "%s+%s" % [trunk["name"], branches[best_index]["name"]], pair))
+		else:
+			push_warning("Fallen Forest: low-poly trunk `%s` had no nearby branch mesh; excluded." % trunk["name"])
+
+	print("Fallen Forest low-poly tree pack: %d background trees + %d trunk/branch trees; rocks and other vegetation excluded." % [standalones.size(), result.size() - standalones.size()])
+	return result
+
+func _collect_components(node: Node, parent_transform: Transform3D, result: Array[Dictionary], low_poly_filter: bool) -> void:
 	var current := parent_transform
 	if node is Node3D:
 		current = parent_transform * (node as Node3D).transform
 	if node is MeshInstance3D:
 		var mesh_instance := node as MeshInstance3D
-		if mesh_instance.mesh != null and _mesh_allowed(pack, str(mesh_instance.name)):
-			var normalized := _normalized_source_transform(mesh_instance.mesh, current)
-			result.append({
-				"pack": pack,
-				"name": str(mesh_instance.name),
-				"mesh": mesh_instance.mesh,
-				"transform": normalized["transform"],
-				"height": normalized["height"],
-			})
+		if mesh_instance.mesh != null:
+			var name := str(mesh_instance.name)
+			if not low_poly_filter or _low_poly_component_allowed(name):
+				result.append({
+					"name": name,
+					"mesh": mesh_instance.mesh,
+					"source_transform": current,
+				})
 	for child: Node in node.get_children():
-		_collect_pack_meshes(child, current, pack, result)
+		_collect_components(child, current, result, low_poly_filter)
 
-func _mesh_allowed(pack: String, mesh_name: String) -> bool:
-	if pack != "low_poly":
-		return true
+func _low_poly_component_allowed(mesh_name: String) -> bool:
 	var name := mesh_name.to_lower()
 	for excluded: String in ["grass", "bush", "shrub", "rock", "ground", "fern", "plant", "weed"]:
 		if excluded in name:
 			return false
-	for included: String in ["tree", "fir", "pine", "spruce", "trunk", "branch"]:
-		if included in name:
-			return true
-	return false
+	return name.begins_with("background_tree_atlas") or "trunk" in name or "branch" in name
 
-func _normalized_source_transform(mesh: Mesh, source_transform: Transform3D) -> Dictionary:
-	var aabb := mesh.get_aabb()
+func _make_variant(pack: String, name: String, source_components: Array) -> Dictionary:
+	var bounds := _components_bounds(source_components)
+	var anchor := Vector3((bounds.min.x + bounds.max.x) * 0.5, bounds.min.y, (bounds.min.z + bounds.max.z) * 0.5)
+	var normalized_components: Array = []
+	for source_variant in source_components:
+		var source_component: Dictionary = source_variant
+		var source_transform: Transform3D = source_component["source_transform"]
+		normalized_components.append({
+			"name": source_component["name"],
+			"mesh": source_component["mesh"],
+			"transform": Transform3D(source_transform.basis, source_transform.origin - anchor),
+		})
+	return {
+		"pack": pack,
+		"name": name,
+		"components": normalized_components,
+		"height": maxf(0.01, bounds.max.y - bounds.min.y),
+	}
+
+func _components_bounds(source_components: Array) -> Dictionary:
 	var min_v := Vector3(INF, INF, INF)
 	var max_v := Vector3(-INF, -INF, -INF)
-	for corner: Vector3 in _aabb_corners(aabb):
-		var p := source_transform * corner
-		min_v = Vector3(minf(min_v.x, p.x), minf(min_v.y, p.y), minf(min_v.z, p.z))
-		max_v = Vector3(maxf(max_v.x, p.x), maxf(max_v.y, p.y), maxf(max_v.z, p.z))
-	var anchor := Vector3((min_v.x + max_v.x) * 0.5, min_v.y, (min_v.z + max_v.z) * 0.5)
-	var normalized := Transform3D(source_transform.basis, source_transform.origin - anchor)
-	return {"transform": normalized, "height": maxf(0.01, max_v.y - min_v.y)}
+	for source_variant in source_components:
+		var component: Dictionary = source_variant
+		var mesh := component["mesh"] as Mesh
+		var source_transform: Transform3D = component["source_transform"]
+		for corner: Vector3 in _aabb_corners(mesh.get_aabb()):
+			var p := source_transform * corner
+			min_v = Vector3(minf(min_v.x, p.x), minf(min_v.y, p.y), minf(min_v.z, p.z))
+			max_v = Vector3(maxf(max_v.x, p.x), maxf(max_v.y, p.y), maxf(max_v.z, p.z))
+	return {"min": min_v, "max": max_v}
+
+func _component_world_center(component: Dictionary) -> Vector3:
+	var mesh := component["mesh"] as Mesh
+	var source_transform: Transform3D = component["source_transform"]
+	var aabb := mesh.get_aabb()
+	return source_transform * (aabb.position + aabb.size * 0.5)
 
 func _aabb_corners(aabb: AABB) -> Array[Vector3]:
 	return [
@@ -238,9 +316,9 @@ func _desired_height_for_pack(pack: String, rng: RandomNumberGenerator) -> float
 			return rng.randf_range(6.2, 9.4)
 
 func _safe_name(value: String) -> String:
-	return value.replace(" ", "_").replace("/", "_").replace("\\", "_")
+	return value.replace(" ", "_").replace("/", "_").replace("\\", "_").replace("+", "_")
 
-func _pack_summary(variants: Array[Dictionary], transforms_by_variant: Array[Array]) -> String:
+func _pack_summary(variants: Array[Dictionary], transforms_by_variant: Array) -> String:
 	var counts := {"spruce": 0, "dead_fir": 0, "low_poly": 0}
 	for i in variants.size():
 		var pack := str(variants[i]["pack"])
