@@ -1,7 +1,7 @@
 # Fast Godot script validation
 
 - Engine: Godot 4.7.1 stable
-- Tested commit: `4ed775cd90528e64b9c4d08604d59ccb41ef2dfb`
+- Tested commit: `75e4f364e7549c04d99684d7dcca5552a09c70ab`
 - Exit code: `0`
 - Result: **PASS**
 
@@ -74,44 +74,26 @@ ERROR: Failed to load script "res://scripts/horror/locust_death_controller.gd" w
        [0] _scan_dir (res://tools/fast_validate_scripts.gd:32)
        [1] _scan_dir (res://tools/fast_validate_scripts.gd:30)
        [2] _initialize (res://tools/fast_validate_scripts.gd:6)
-SCRIPT ERROR: Parse Error: Cannot infer the type of "vertical" variable because the value doesn't have a set type.
-          at: GDScript::reload (res://scripts/player/viewmodel_controller.gd:55)
+SCRIPT ERROR: Parse Error: Assigned value for constant "DOCUMENT_DURATIONS" isn't a constant expression.
+          at: GDScript::reload (res://scripts/player/viewmodel_controller.gd:3)
           GDScript backtrace (most recent call first):
               [0] _scan_dir (res://tools/fast_validate_scripts.gd:32)
               [1] _scan_dir (res://tools/fast_validate_scripts.gd:30)
               [2] _initialize (res://tools/fast_validate_scripts.gd:6)
-SCRIPT ERROR: Parse Error: Cannot infer the type of "duration" variable because the value doesn't have a set type.
-          at: GDScript::reload (res://scripts/player/viewmodel_controller.gd:113)
+SCRIPT ERROR: Parse Error: Assigned value for constant "DOCUMENT_SIDE_OFFSETS" isn't a constant expression.
+          at: GDScript::reload (res://scripts/player/viewmodel_controller.gd:4)
           GDScript backtrace (most recent call first):
               [0] _scan_dir (res://tools/fast_validate_scripts.gd:32)
               [1] _scan_dir (res://tools/fast_validate_scripts.gd:30)
               [2] _initialize (res://tools/fast_validate_scripts.gd:6)
-SCRIPT ERROR: Parse Error: Cannot infer the type of "side_offset" variable because the value doesn't have a set type.
-          at: GDScript::reload (res://scripts/player/viewmodel_controller.gd:114)
+SCRIPT ERROR: Parse Error: Assigned value for constant "DOCUMENT_ROLL_DEGREES" isn't a constant expression.
+          at: GDScript::reload (res://scripts/player/viewmodel_controller.gd:5)
           GDScript backtrace (most recent call first):
               [0] _scan_dir (res://tools/fast_validate_scripts.gd:32)
               [1] _scan_dir (res://tools/fast_validate_scripts.gd:30)
               [2] _initialize (res://tools/fast_validate_scripts.gd:6)
-SCRIPT ERROR: Parse Error: Cannot infer the type of "roll" variable because the value doesn't have a set type.
-          at: GDScript::reload (res://scripts/player/viewmodel_controller.gd:115)
-          GDScript backtrace (most recent call first):
-              [0] _scan_dir (res://tools/fast_validate_scripts.gd:32)
-              [1] _scan_dir (res://tools/fast_validate_scripts.gd:30)
-              [2] _initialize (res://tools/fast_validate_scripts.gd:6)
-SCRIPT ERROR: Parse Error: Cannot infer the type of "pitch" variable because the value doesn't have a set type.
-          at: GDScript::reload (res://scripts/player/viewmodel_controller.gd:116)
-          GDScript backtrace (most recent call first):
-              [0] _scan_dir (res://tools/fast_validate_scripts.gd:32)
-              [1] _scan_dir (res://tools/fast_validate_scripts.gd:30)
-              [2] _initialize (res://tools/fast_validate_scripts.gd:6)
-SCRIPT ERROR: Parse Error: Cannot infer the type of "raise_time" variable because the value doesn't have a set type.
-          at: GDScript::reload (res://scripts/player/viewmodel_controller.gd:122)
-          GDScript backtrace (most recent call first):
-              [0] _scan_dir (res://tools/fast_validate_scripts.gd:32)
-              [1] _scan_dir (res://tools/fast_validate_scripts.gd:30)
-              [2] _initialize (res://tools/fast_validate_scripts.gd:6)
-SCRIPT ERROR: Parse Error: Cannot infer the type of "grip_time" variable because the value doesn't have a set type.
-          at: GDScript::reload (res://scripts/player/viewmodel_controller.gd:129)
+SCRIPT ERROR: Parse Error: Assigned value for constant "DOCUMENT_PITCH_DEGREES" isn't a constant expression.
+          at: GDScript::reload (res://scripts/player/viewmodel_controller.gd:6)
           GDScript backtrace (most recent call first):
               [0] _scan_dir (res://tools/fast_validate_scripts.gd:32)
               [1] _scan_dir (res://tools/fast_validate_scripts.gd:30)
