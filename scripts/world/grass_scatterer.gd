@@ -1,6 +1,6 @@
 extends Node3D
 
-const DEFAULT_GRASS_SCENE := preload("res://assets/environment/grass/source/Grass.fbx")
+const DEFAULT_GRASS_PATH := "res://assets/environment/grass/source/Grass.fbx"
 
 @export var target_count := 16000
 @export var world_half_extent := 344.0
@@ -9,7 +9,7 @@ const DEFAULT_GRASS_SCENE := preload("res://assets/environment/grass/source/Gras
 @export var trail_extra_clearance := 0.38
 @export var terrain_path: NodePath
 @export var trail_path: NodePath
-@export var grass_scene: PackedScene = DEFAULT_GRASS_SCENE
+@export_file("*.fbx", "*.glb", "*.gltf") var grass_resource_path := DEFAULT_GRASS_PATH
 @export var min_scale := 0.58
 @export var max_scale := 1.05
 
@@ -30,7 +30,7 @@ func build_grass() -> void:
 	for child: Node in get_children():
 		child.queue_free()
 	_document_positions = _collect_document_positions()
-	var variants := _resolve_grass_variants()
+	var variants: Array[Dictionary] = _resolve_grass_variants()
 	if variants.is_empty():
 		push_warning("Fallen Forest: canonical grass FBX produced no usable mesh variants.")
 		return
@@ -58,9 +58,8 @@ func build_grass() -> void:
 func _build_variant_multimesh(variant: Dictionary, requested_count: int, rng: RandomNumberGenerator, variant_index: int) -> void:
 	if requested_count <= 0:
 		return
-	var mesh: Mesh = variant.mesh
-	var source_transform: Transform3D = variant.transform
-	# Remove pack-layout X/Z offsets while preserving import scale/orientation and ground offset.
+	var mesh := variant["mesh"] as Mesh
+	var source_transform: Transform3D = variant["transform"]
 	source_transform.origin.x = 0.0
 	source_transform.origin.z = 0.0
 
@@ -83,8 +82,7 @@ func _build_variant_multimesh(variant: Dictionary, requested_count: int, rng: Ra
 			if bool(_trails.call("is_in_trail_clearance", x, z, trail_extra_clearance)):
 				continue
 
-		# Preserve uneven density instead of a uniform green carpet.
-		var cluster := 0.5 + 0.5 * sin(x * 0.028 + sin(z * 0.017) * 2.1 + float(variant_index) * 0.7)
+		var cluster: float = 0.5 + 0.5 * sin(x * 0.028 + sin(z * 0.017) * 2.1 + float(variant_index) * 0.7)
 		if rng.randf() > lerpf(0.34, 0.96, cluster):
 			continue
 
@@ -124,9 +122,11 @@ func _near_document(x: float, z: float) -> bool:
 
 func _resolve_grass_variants() -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
-	if grass_scene == null:
+	var resource := ResourceLoader.load(grass_resource_path)
+	if not resource is PackedScene:
+		push_warning("Fallen Forest: grass resource is unavailable as PackedScene: %s" % grass_resource_path)
 		return result
-	var root := grass_scene.instantiate()
+	var root := (resource as PackedScene).instantiate()
 	_collect_meshes(root, Transform3D.IDENTITY, result)
 	root.free()
 	return result
