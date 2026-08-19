@@ -7,6 +7,7 @@ on:
       - "scripts/**"
       - "scenes/**"
       - "assets/**"
+      - "tools/inspect_assets.gd"
       - ".github/workflows/godot-validate.yml"
 
 permissions:
@@ -40,12 +41,27 @@ jobs:
         shell: bash
         run: |
           set +e
-          timeout 240s /tmp/godot/Godot_v4.7.1-stable_linux.x86_64 \
-            --headless --editor --path . --quit-after 8 \
+          GODOT=/tmp/godot/Godot_v4.7.1-stable_linux.x86_64
+          timeout 240s "$GODOT" --headless --editor --path . --quit-after 8 \
             > /tmp/godot-validation.log 2>&1
-          CODE=$?
+          PARSE_CODE=$?
           cat /tmp/godot-validation.log
+
+          INSPECT_CODE=0
+          if [ "$PARSE_CODE" = "0" ]; then
+            timeout 120s "$GODOT" --headless --path . --script tools/inspect_assets.gd \
+              > /tmp/godot-assets.log 2>&1
+            INSPECT_CODE=$?
+            cat /tmp/godot-assets.log
+          else
+            echo "Asset inspection skipped because project import/parse failed." > /tmp/godot-assets.log
+          fi
+
+          CODE=$PARSE_CODE
+          if [ "$CODE" = "0" ] && [ "$INSPECT_CODE" != "0" ]; then CODE=$INSPECT_CODE; fi
           echo "code=$CODE" >> "$GITHUB_OUTPUT"
+          echo "parse_code=$PARSE_CODE" >> "$GITHUB_OUTPUT"
+          echo "inspect_code=$INSPECT_CODE" >> "$GITHUB_OUTPUT"
           exit 0
 
       - name: Record validation result
@@ -53,15 +69,21 @@ jobs:
         shell: bash
         run: |
           CODE='${{ steps.validation.outputs.code }}'
+          PARSE_CODE='${{ steps.validation.outputs.parse_code }}'
+          INSPECT_CODE='${{ steps.validation.outputs.inspect_code }}'
           if [ -z "$CODE" ]; then CODE=999; fi
+          if [ -z "$PARSE_CODE" ]; then PARSE_CODE=999; fi
+          if [ -z "$INSPECT_CODE" ]; then INSPECT_CODE=999; fi
           TESTED_SHA="$GITHUB_SHA"
           mkdir -p docs
           {
             echo '# Godot validation status'
             echo
-            echo "- Engine: Godot 4.7.1 stable"
+            echo '- Engine: Godot 4.7.1 stable'
             echo "- Tested commit: \`$TESTED_SHA\`"
-            echo "- Exit code: \`$CODE\`"
+            echo "- Project import/parse exit code: \`$PARSE_CODE\`"
+            echo "- Asset inspection exit code: \`$INSPECT_CODE\`"
+            echo "- Overall exit code: \`$CODE\`"
             if [ "$CODE" = "0" ]; then
               echo '- Result: **PASS**'
             else
@@ -73,14 +95,22 @@ jobs:
             echo '```text'
             tail -n 120 /tmp/godot-validation.log 2>/dev/null || true
             echo '```'
+            echo
+            echo '## Tail of asset inspector log'
+            echo
+            echo '```text'
+            tail -n 80 /tmp/godot-assets.log 2>/dev/null || true
+            echo '```'
           } > docs/GODOT_VALIDATION.md
 
           git config user.name "Fallen Forest Godot Validator"
           git config user.email "actions@users.noreply.github.com"
           git add docs/GODOT_VALIDATION.md
+          if [ -f docs/ASSET_IMPORT_REPORT.md ]; then git add docs/ASSET_IMPORT_REPORT.md; fi
           if ! git diff --cached --quiet; then
             git pull --rebase origin main || true
             git add docs/GODOT_VALIDATION.md
+            if [ -f docs/ASSET_IMPORT_REPORT.md ]; then git add docs/ASSET_IMPORT_REPORT.md; fi
             git commit -m "Record Godot validation for $TESTED_SHA"
             git push origin HEAD:main || true
           fi
