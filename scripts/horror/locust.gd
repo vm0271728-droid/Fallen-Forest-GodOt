@@ -14,7 +14,7 @@ enum State { HIDE, RETREAT, RAGE, CHASE }
 @export var hide_duration := Vector2(1.8, 3.6)
 @export var retreat_duration := Vector2(1.4, 2.4)
 
-var state := State.HIDE
+var state: int = State.HIDE
 var final_chase := false
 var _player: CharacterBody3D
 var _initial_distance := 0.0
@@ -51,9 +51,9 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 
-func _process_hide(_delta: float) -> void:
-	velocity.x = move_toward(velocity.x, 0.0, 14.0 * get_physics_process_delta_time())
-	velocity.z = move_toward(velocity.z, 0.0, 14.0 * get_physics_process_delta_time())
+func _process_hide(delta: float) -> void:
+	velocity.x = move_toward(velocity.x, 0.0, 14.0 * delta)
+	velocity.z = move_toward(velocity.z, 0.0, 14.0 * delta)
 	_face_player()
 	var distance := _flat_distance_to_player()
 	if distance <= rage_distance or distance < _initial_distance - 2.0:
@@ -103,7 +103,7 @@ func _process_chase(delta: float) -> void:
 	velocity.z = move_toward(velocity.z, direction.z * speed, 18.0 * delta)
 	rotation.y = lerp_angle(rotation.y, atan2(-direction.x, -direction.z), 1.0 - exp(-8.0 * delta))
 
-func _enter_state(next_state: State, duration: float) -> void:
+func _enter_state(next_state: int, duration: float) -> void:
 	state = next_state
 	_state_until = _now() + duration
 
