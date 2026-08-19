@@ -1,9 +1,9 @@
 # Fast Godot script validation
 
 - Engine: Godot 4.7.1 stable
-- Tested commit: `1f1ef3b0c80d87ea057336cb8106c56461d04f30`
-- Exit code: `0`
-- Result: **PASS**
+- Tested commit: `dcedfb4c75293beabd7688bec2597ea9f62d1a5a`
+- Exit code: `1`
+- Result: **FAIL**
 
 ```text
 Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
@@ -33,24 +33,6 @@ SCRIPT ERROR: Parse Error: Assigned value for constant "DOCUMENT_PITCH_DEGREES" 
               [1] _scan_dir (res://tools/fast_validate_scripts.gd:30)
               [2] _initialize (res://tools/fast_validate_scripts.gd:6)
 ERROR: Failed to load script "res://scripts/player/viewmodel_controller.gd" with error "Parse error".
-   at: load (modules/gdscript/gdscript_resource_format.cpp:46)
-   GDScript backtrace (most recent call first):
-       [0] _scan_dir (res://tools/fast_validate_scripts.gd:32)
-       [1] _scan_dir (res://tools/fast_validate_scripts.gd:30)
-       [2] _initialize (res://tools/fast_validate_scripts.gd:6)
-SCRIPT ERROR: Parse Error: Preload file "res://assets/environment/grass/source/Grass.fbx" has no resource loaders (unrecognized file extension).
-          at: GDScript::reload (res://scripts/world/grass_scatterer.gd:3)
-          GDScript backtrace (most recent call first):
-              [0] _scan_dir (res://tools/fast_validate_scripts.gd:32)
-              [1] _scan_dir (res://tools/fast_validate_scripts.gd:30)
-              [2] _initialize (res://tools/fast_validate_scripts.gd:6)
-SCRIPT ERROR: Parse Error: Cannot infer the type of "DEFAULT_GRASS_SCENE" constant because the value doesn't have a set type.
-          at: GDScript::reload (res://scripts/world/grass_scatterer.gd:3)
-          GDScript backtrace (most recent call first):
-              [0] _scan_dir (res://tools/fast_validate_scripts.gd:32)
-              [1] _scan_dir (res://tools/fast_validate_scripts.gd:30)
-              [2] _initialize (res://tools/fast_validate_scripts.gd:6)
-ERROR: Failed to load script "res://scripts/world/grass_scatterer.gd" with error "Parse error".
    at: load (modules/gdscript/gdscript_resource_format.cpp:46)
    GDScript backtrace (most recent call first):
        [0] _scan_dir (res://tools/fast_validate_scripts.gd:32)
