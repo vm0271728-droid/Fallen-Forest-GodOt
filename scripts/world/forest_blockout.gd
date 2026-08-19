@@ -5,18 +5,24 @@ const DEFAULT_TREE_SCENE := preload("res://assets/environment/trees/black_spruce
 @export var tree_count := 3250
 @export var world_half_extent := 345.0
 @export var start_clear_radius := 18.0
+@export var trail_extra_clearance := 0.95
 @export var min_scale := 1.20
 @export var max_scale := 1.90
 @export var terrain_path: NodePath
+@export var trail_path: NodePath
 @export var tree_scene: PackedScene = DEFAULT_TREE_SCENE
 
 var tree_positions := PackedVector3Array()
 var _terrain: Node
+var _trails: Node
 
 func _ready() -> void:
 	_terrain = get_node_or_null(terrain_path)
+	_trails = get_node_or_null(trail_path)
 	if _terrain == null and get_parent() != null:
 		_terrain = get_parent().get_node_or_null("Terrain")
+	if _trails == null and get_parent() != null:
+		_trails = get_parent().get_node_or_null("TrailNetwork")
 	build_forest()
 
 func build_forest() -> void:
@@ -35,14 +41,16 @@ func build_forest() -> void:
 
 	var placed := 0
 	var attempts := 0
-	while placed < tree_count and attempts < tree_count * 12:
+	while placed < tree_count and attempts < tree_count * 14:
 		attempts += 1
 		var x := rng.randf_range(-world_half_extent, world_half_extent)
 		var z := rng.randf_range(-world_half_extent, world_half_extent)
 		if Vector2(x, z).length() < start_clear_radius:
 			continue
+		if _trails != null and _trails.has_method("is_in_trail_clearance"):
+			if bool(_trails.call("is_in_trail_clearance", x, z, trail_extra_clearance)):
+				continue
 
-		# Coarse clustering: some areas are intentionally much denser than others.
 		var density := 0.5 + 0.5 * sin(x * 0.021 + sin(z * 0.013) * 2.4)
 		if rng.randf() > lerpf(0.35, 0.96, density):
 			continue
