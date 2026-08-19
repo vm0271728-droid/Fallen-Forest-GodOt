@@ -50,6 +50,7 @@ terrain_path = NodePath("../Terrain")
 [node name="ForestBlockout" type="MultiMeshInstance3D" parent="."]
 script = ExtResource("5_forest")
 terrain_path = NodePath("../Terrain")
+trail_path = NodePath("../TrailNetwork")
 
 [node name="DocumentSystem" type="Node3D" parent="."]
 script = ExtResource("6_docs")
