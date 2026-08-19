@@ -9,6 +9,8 @@ const TARGETS := [
 	"res://assets/environment/grass/source/Grass.fbx",
 	"res://assets/environment/trees/black_spruce/Picea mariana HD_Arctic mat 100_LOD0.fbx",
 	"res://assets/environment/trees/black_spruce/zzz_LODs/LOD2/Picea mariana HD_Arctic mat 100_LOD2.fbx",
+	"res://assets/environment/trees/dead_firs/firs.obj",
+	"res://assets/environment/trees/low_poly_pack/source/Tree_Pack.fbx",
 	"res://assets/vehicles/pickup/source/Pickup Afghanistan.fbx",
 ]
 
@@ -56,7 +58,7 @@ func inspect_scene(path: String) -> void:
 		"mesh_min": Vector3(INF, INF, INF),
 		"mesh_max": Vector3(-INF, -INF, -INF),
 	}
-	walk(root, stats, 0, Transform3D.IDENTITY)
+	walk(root, stats, 0, Transform3D.IDENTITY, path)
 	lines.append("")
 	lines.append("Summary: meshes=%d, skeletons=%d, animations=%d" % [stats.meshes, stats.skeletons, stats.animations])
 	if int(stats.meshes) > 0:
@@ -68,7 +70,18 @@ func inspect_scene(path: String) -> void:
 	lines.append("")
 	root.free()
 
-func walk(node: Node, stats: Dictionary, depth: int, parent_transform: Transform3D) -> void:
+func _tree_pack_classification(path: String, node_name: String) -> String:
+	if "low_poly_pack" not in path:
+		return ""
+	var n := node_name.to_lower()
+	for excluded: String in ["grass", "bush", "shrub", "rock", "ground", "fern", "plant"]:
+		if excluded in n:
+			return " [EXCLUDE:%s]" % excluded
+	if "tree" in n or "trunk" in n or "branch" in n:
+		return " [TREE-CANDIDATE]"
+	return " [REVIEW]"
+
+func walk(node: Node, stats: Dictionary, depth: int, parent_transform: Transform3D, source_path: String) -> void:
 	var indent := "  ".repeat(depth)
 	var current_transform: Transform3D = parent_transform
 	if node is Node3D:
@@ -94,7 +107,8 @@ func walk(node: Node, stats: Dictionary, depth: int, parent_transform: Transform
 			var max_v: Vector3 = stats.mesh_max
 			stats.mesh_min = Vector3(minf(min_v.x, p.x), minf(min_v.y, p.y), minf(min_v.z, p.z))
 			stats.mesh_max = Vector3(maxf(max_v.x, p.x), maxf(max_v.y, p.y), maxf(max_v.z, p.z))
-		lines.append("%s- Mesh `%s`: AABB `(%.3f, %.3f, %.3f)`" % [indent, node.name, aabb.size.x, aabb.size.y, aabb.size.z])
+		var classification := _tree_pack_classification(source_path, str(node.name))
+		lines.append("%s- Mesh `%s`: AABB `(%.3f, %.3f, %.3f)`%s" % [indent, node.name, aabb.size.x, aabb.size.y, aabb.size.z, classification])
 	elif node is Skeleton3D:
 		var skeleton := node as Skeleton3D
 		stats.skeletons = int(stats.skeletons) + 1
@@ -111,4 +125,4 @@ func walk(node: Node, stats: Dictionary, depth: int, parent_transform: Transform
 		lines.append("%s- AnimationPlayer `%s`: %s" % [indent, node.name, ", ".join(names) if not names.is_empty() else "no animations"])
 
 	for child: Node in node.get_children():
-		walk(child, stats, depth + 1, current_transform)
+		walk(child, stats, depth + 1, current_transform, source_path)
