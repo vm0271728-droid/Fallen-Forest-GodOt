@@ -1,6 +1,7 @@
 name: Validate Godot project
 
 on:
+  workflow_dispatch:
   push:
     paths:
       - "project.godot"
@@ -15,7 +16,7 @@ permissions:
 
 concurrency:
   group: godot-validate-main
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   validate:
