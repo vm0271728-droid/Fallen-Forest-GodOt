@@ -1,7 +1,7 @@
 extends Node
 
-const FRONT_SCREAMER := preload("res://assets/audio/screamers/jakes-screamer.mp3")
-const REAR_SCREAMER := preload("res://assets/audio/screamers/the-screamer-shared-between-mallie-and-jenny.mp3")
+const FRONT_SCREAMER_PATH := "res://assets/audio/screamers/jakes-screamer.mp3"
+const REAR_SCREAMER_PATH := "res://assets/audio/screamers/the-screamer-shared-between-mallie-and-jenny.mp3"
 
 @export var red_peak_alpha := 0.22
 @export var black_fade_time := 0.62
@@ -55,7 +55,6 @@ func play_and_recover(player: CharacterBody3D, locust: Node3D, terrain: Node) ->
 	await fade.finished
 	await get_tree().create_timer(0.24).timeout
 
-	# Restore save while the screen is fully black.
 	if SaveSystem.has_run():
 		SaveSystem.load_run()
 	if SaveSystem.has_player_position:
@@ -88,7 +87,6 @@ func _is_front_attack(player: Node3D, locust: Node3D) -> bool:
 	return (-player.global_basis.z).dot(to_locust.normalized()) >= 0.0
 
 func _play_front(player: CharacterBody3D, head: Node3D, arms: Node3D, locust: Node3D) -> void:
-	# Chest impact: player sees the creature, defensive hands rise, then the body folds.
 	var to_locust := locust.global_position - player.global_position
 	to_locust.y = 0.0
 	if to_locust.length_squared() > 0.001:
@@ -115,8 +113,6 @@ func _play_front(player: CharacterBody3D, head: Node3D, arms: Node3D, locust: No
 	await _pulse_red(0.16)
 
 func _play_rear(_player: CharacterBody3D, head: Node3D, arms: Node3D) -> void:
-	# Rear impalement: no convenient turn-around reveal. Camera is pulled forward/down,
-	# hands snap toward the center as if trying to grab the limb behind the chest.
 	var hit := create_tween().set_parallel(true)
 	hit.tween_property(head, "position", head.position + Vector3(-0.04, -0.05, -0.17), 0.12).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	hit.tween_property(head, "rotation", head.rotation + Vector3(deg_to_rad(11.0), 0.0, deg_to_rad(-7.0)), 0.12)
@@ -141,9 +137,14 @@ func _pulse_red(duration: float) -> void:
 	await pulse.finished
 
 func _play_screamer(front: bool) -> void:
+	var path := FRONT_SCREAMER_PATH if front else REAR_SCREAMER_PATH
+	var stream := ResourceLoader.load(path) as AudioStream
+	if stream == null:
+		push_warning("Fallen Forest: approved Locust screamer could not be loaded: %s" % path)
+		return
 	_audio = AudioStreamPlayer.new()
 	_audio.name = "LocustDeathScreamer"
-	_audio.stream = FRONT_SCREAMER if front else REAR_SCREAMER
+	_audio.stream = stream
 	_audio.volume_db = -1.5
 	add_child(_audio)
 	_audio.play()
