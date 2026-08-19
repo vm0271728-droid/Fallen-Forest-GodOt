@@ -36,31 +36,44 @@ jobs:
           chmod +x /tmp/godot/Godot_v4.7.1-stable_linux.x86_64
           /tmp/godot/Godot_v4.7.1-stable_linux.x86_64 --version
 
-      - name: Import and parse project
+      - name: Import, smoke-test and inspect project
         id: validation
         shell: bash
         run: |
           set +e
           GODOT=/tmp/godot/Godot_v4.7.1-stable_linux.x86_64
-          timeout 240s "$GODOT" --headless --editor --path . --quit-after 8 \
-            > /tmp/godot-validation.log 2>&1
-          PARSE_CODE=$?
-          cat /tmp/godot-validation.log
+
+          timeout 300s "$GODOT" --headless --path . --import \
+            > /tmp/godot-import.log 2>&1
+          IMPORT_CODE=$?
+          cat /tmp/godot-import.log
+
+          SMOKE_CODE=0
+          if [ "$IMPORT_CODE" = "0" ]; then
+            timeout 40s "$GODOT" --headless --path . --quit-after 6 \
+              > /tmp/godot-smoke.log 2>&1
+            SMOKE_CODE=$?
+            cat /tmp/godot-smoke.log
+          else
+            echo "Gameplay smoke test skipped because import failed." > /tmp/godot-smoke.log
+          fi
 
           INSPECT_CODE=0
-          if [ "$PARSE_CODE" = "0" ]; then
+          if [ "$IMPORT_CODE" = "0" ]; then
             timeout 120s "$GODOT" --headless --path . --script tools/inspect_assets.gd \
               > /tmp/godot-assets.log 2>&1
             INSPECT_CODE=$?
             cat /tmp/godot-assets.log
           else
-            echo "Asset inspection skipped because project import/parse failed." > /tmp/godot-assets.log
+            echo "Asset inspection skipped because import failed." > /tmp/godot-assets.log
           fi
 
-          CODE=$PARSE_CODE
+          CODE=$IMPORT_CODE
+          if [ "$CODE" = "0" ] && [ "$SMOKE_CODE" != "0" ]; then CODE=$SMOKE_CODE; fi
           if [ "$CODE" = "0" ] && [ "$INSPECT_CODE" != "0" ]; then CODE=$INSPECT_CODE; fi
           echo "code=$CODE" >> "$GITHUB_OUTPUT"
-          echo "parse_code=$PARSE_CODE" >> "$GITHUB_OUTPUT"
+          echo "import_code=$IMPORT_CODE" >> "$GITHUB_OUTPUT"
+          echo "smoke_code=$SMOKE_CODE" >> "$GITHUB_OUTPUT"
           echo "inspect_code=$INSPECT_CODE" >> "$GITHUB_OUTPUT"
           exit 0
 
@@ -69,10 +82,12 @@ jobs:
         shell: bash
         run: |
           CODE='${{ steps.validation.outputs.code }}'
-          PARSE_CODE='${{ steps.validation.outputs.parse_code }}'
+          IMPORT_CODE='${{ steps.validation.outputs.import_code }}'
+          SMOKE_CODE='${{ steps.validation.outputs.smoke_code }}'
           INSPECT_CODE='${{ steps.validation.outputs.inspect_code }}'
           if [ -z "$CODE" ]; then CODE=999; fi
-          if [ -z "$PARSE_CODE" ]; then PARSE_CODE=999; fi
+          if [ -z "$IMPORT_CODE" ]; then IMPORT_CODE=999; fi
+          if [ -z "$SMOKE_CODE" ]; then SMOKE_CODE=999; fi
           if [ -z "$INSPECT_CODE" ]; then INSPECT_CODE=999; fi
           TESTED_SHA="$GITHUB_SHA"
           mkdir -p docs
@@ -81,7 +96,8 @@ jobs:
             echo
             echo '- Engine: Godot 4.7.1 stable'
             echo "- Tested commit: \`$TESTED_SHA\`"
-            echo "- Project import/parse exit code: \`$PARSE_CODE\`"
+            echo "- Full asset import exit code: \`$IMPORT_CODE\`"
+            echo "- Gameplay smoke-test exit code: \`$SMOKE_CODE\`"
             echo "- Asset inspection exit code: \`$INSPECT_CODE\`"
             echo "- Overall exit code: \`$CODE\`"
             if [ "$CODE" = "0" ]; then
@@ -90,10 +106,16 @@ jobs:
               echo '- Result: **FAIL**'
             fi
             echo
-            echo '## Tail of headless editor log'
+            echo '## Tail of import log'
             echo
             echo '```text'
-            tail -n 120 /tmp/godot-validation.log 2>/dev/null || true
+            tail -n 100 /tmp/godot-import.log 2>/dev/null || true
+            echo '```'
+            echo
+            echo '## Tail of gameplay smoke-test log'
+            echo
+            echo '```text'
+            tail -n 140 /tmp/godot-smoke.log 2>/dev/null || true
             echo '```'
             echo
             echo '## Tail of asset inspector log'
