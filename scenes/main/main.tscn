@@ -1,13 +1,14 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scripts/main/main.gd" id="1_main"]
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="2_player"]
 [ext_resource type="Script" path="res://scripts/input/mobile_controls.gd" id="3_mobile"]
-[ext_resource type="Script" path="res://scripts/world/forest_blockout.gd" id="4_forest"]
-[ext_resource type="Script" path="res://scripts/documents/document_spawner.gd" id="5_docs"]
-[ext_resource type="PackedScene" path="res://scenes/documents/document_pickup.tscn" id="6_doc_scene"]
-[ext_resource type="Script" path="res://scripts/ui/hud.gd" id="7_hud"]
-[ext_resource type="PackedScene" path="res://scenes/player/flashlight_pickup.tscn" id="8_flash_pickup"]
+[ext_resource type="PackedScene" path="res://scenes/world/terrain.tscn" id="4_terrain"]
+[ext_resource type="Script" path="res://scripts/world/forest_blockout.gd" id="5_forest"]
+[ext_resource type="Script" path="res://scripts/documents/document_spawner.gd" id="6_docs"]
+[ext_resource type="PackedScene" path="res://scenes/documents/document_pickup.tscn" id="7_doc_scene"]
+[ext_resource type="Script" path="res://scripts/ui/hud.gd" id="8_hud"]
+[ext_resource type="PackedScene" path="res://scenes/player/flashlight_pickup.tscn" id="9_flash_pickup"]
 
 [sub_resource type="Environment" id="Environment_forest"]
 background_mode = 1
@@ -19,16 +20,6 @@ fog_light_energy = 0.25
 fog_density = 0.012
 fog_height = 0.0
 fog_height_density = 0.08
-
-[sub_resource type="BoxMesh" id="BoxMesh_ground"]
-size = Vector3(720, 0.2, 720)
-
-[sub_resource type="StandardMaterial3D" id="Ground_material"]
-albedo_color = Color(0.018, 0.028, 0.018, 1)
-roughness = 1.0
-
-[sub_resource type="BoxShape3D" id="BoxShape_ground"]
-size = Vector3(720, 0.2, 720)
 
 [node name="Main" type="Node3D"]
 script = ExtResource("1_main")
@@ -42,38 +33,30 @@ light_color = Color(0.48, 0.57, 0.72, 1)
 light_energy = 0.08
 shadow_enabled = true
 
-[node name="Ground" type="StaticBody3D" parent="."]
-collision_layer = 1
-collision_mask = 1
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="Ground"]
-position = Vector3(0, -0.1, 0)
-mesh = SubResource("BoxMesh_ground")
-material_override = SubResource("Ground_material")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Ground"]
-position = Vector3(0, -0.1, 0)
-shape = SubResource("BoxShape_ground")
+[node name="Terrain" parent="." instance=ExtResource("4_terrain")]
 
 [node name="ForestBlockout" type="MultiMeshInstance3D" parent="."]
-script = ExtResource("4_forest")
+script = ExtResource("5_forest")
+terrain_path = NodePath("../Terrain")
 
 [node name="DocumentSystem" type="Node3D" parent="."]
-script = ExtResource("5_docs")
-document_scene = ExtResource("6_doc_scene")
+script = ExtResource("6_docs")
+document_scene = ExtResource("7_doc_scene")
+terrain_path = NodePath("../Terrain")
+forest_path = NodePath("../ForestBlockout")
 
 [node name="Player" parent="." instance=ExtResource("2_player")]
 position = Vector3(0, 0.05, 0)
 collision_layer = 1
 collision_mask = 1
 
-[node name="FlashlightPickup" parent="." instance=ExtResource("8_flash_pickup")]
+[node name="FlashlightPickup" parent="." instance=ExtResource("9_flash_pickup")]
 position = Vector3(2.8, 0.16, 1.5)
 rotation_degrees = Vector3(0, 22, 0)
 
 [node name="HUD" type="CanvasLayer" parent="."]
 layer = 15
-script = ExtResource("7_hud")
+script = ExtResource("8_hud")
 
 [node name="MobileUI" type="CanvasLayer" parent="."]
 layer = 20
