@@ -70,6 +70,18 @@ func attach_to_left_palm(node: Node3D, local_position: Vector3, local_rotation_d
 	node.rotation_degrees = local_rotation_degrees
 	return true
 
+func attach_preserving_pose_to_right_palm(node: Node3D) -> bool:
+	if not ready_for_grips or right_palm == null or node == null:
+		return false
+	node.reparent(right_palm, true)
+	return true
+
+func attach_preserving_pose_to_left_palm(node: Node3D) -> bool:
+	if not ready_for_grips or left_palm == null or node == null:
+		return false
+	node.reparent(left_palm, true)
+	return true
+
 func detach_to_viewmodel(node: Node3D, viewmodel_root: Node3D, keep_global := true) -> void:
 	if node == null or viewmodel_root == null:
 		return
