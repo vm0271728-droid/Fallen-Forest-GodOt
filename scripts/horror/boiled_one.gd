@@ -22,6 +22,10 @@ var _expires_at := 0.0
 var _triggered := false
 var _base_visual_rotation := Vector3.ZERO
 
+func _ready() -> void:
+	add_to_group("ff_monster")
+	add_to_group("ff_boiled")
+
 func begin_encounter(player: CharacterBody3D) -> void:
 	_player = player
 	_camera = player.get_node_or_null("Head/Camera3D")
