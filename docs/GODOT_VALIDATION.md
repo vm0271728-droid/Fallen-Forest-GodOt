@@ -1,7 +1,7 @@
 # Godot validation status
 
 - Engine: Godot 4.7.1 stable
-- Tested commit: `623500b111d30dbf10031527e30109969445590d`
+- Tested commit: `2def06352931ea27a63948939d58fafec4df03a6`
 - Full asset import exit code: `0`
 - Gameplay smoke-test exit code: `0`
 - Asset inspection exit code: `0`
@@ -119,7 +119,7 @@ ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is
 Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
 
 Fallen Forest terrain: 129x129 heightfield generated across 720m.
-Fallen Forest blockout: 3250 trees generated with MultiMesh.
+Fallen Forest: 3250 canonical black-spruce LOD2 trees generated with MultiMesh.
 ```
 
 ## Tail of asset inspector log
