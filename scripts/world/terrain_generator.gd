@@ -145,3 +145,11 @@ func sample_height(world_x: float, world_z: float) -> float:
 	var a := lerpf(_height_index(x0, z0), _height_index(x1, z0), tx)
 	var b := lerpf(_height_index(x0, z1), _height_index(x1, z1), tx)
 	return lerpf(a, b, tz)
+
+func sample_normal(world_x: float, world_z: float) -> Vector3:
+	var step := maxf(_cell_size, 0.5)
+	var left := sample_height(world_x - step, world_z)
+	var right := sample_height(world_x + step, world_z)
+	var back := sample_height(world_x, world_z - step)
+	var front := sample_height(world_x, world_z + step)
+	return Vector3(left - right, step * 2.0, back - front).normalized()
