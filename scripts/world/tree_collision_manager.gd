@@ -7,13 +7,18 @@ extends StaticBody3D
 @export var refresh_interval := 0.45
 @export var trunk_radius := 0.34
 @export var trunk_height := 11.5
+@export var foliage_radius := 2.15
+@export var foliage_height := 4.9
 
 var _forest: Node
 var _player: Node3D
-var _pool: Array[CollisionShape3D] = []
+var _trunk_pool: Array[CollisionShape3D] = []
+var _foliage_pool: Array[CollisionShape3D] = []
+var _foliage_body: StaticBody3D
 var _elapsed := 999.0
 
 func _ready() -> void:
+	# Layer 1 is real movement collision.
 	collision_layer = 1
 	collision_mask = 0
 	_forest = get_node_or_null(forest_path)
@@ -28,16 +33,33 @@ func _physics_process(delta: float) -> void:
 		refresh_collisions()
 
 func _build_pool() -> void:
-	var shared_shape := CylinderShape3D.new()
-	shared_shape.radius = trunk_radius
-	shared_shape.height = trunk_height
+	var trunk_shape := CylinderShape3D.new()
+	trunk_shape.radius = trunk_radius
+	trunk_shape.height = trunk_height
+
+	_foliage_body = StaticBody3D.new()
+	_foliage_body.name = "FoliageLOSBlockers"
+	# Layer 8 is raycast-only for monster vision. Player collision mask remains layer 1.
+	_foliage_body.collision_layer = 8
+	_foliage_body.collision_mask = 0
+	add_child(_foliage_body)
+	var foliage_shape := SphereShape3D.new()
+	foliage_shape.radius = foliage_radius
+
 	for i in pool_size:
-		var collision := CollisionShape3D.new()
-		collision.name = "TreeCollider_%03d" % i
-		collision.shape = shared_shape
-		collision.disabled = true
-		add_child(collision)
-		_pool.append(collision)
+		var trunk := CollisionShape3D.new()
+		trunk.name = "TreeCollider_%03d" % i
+		trunk.shape = trunk_shape
+		trunk.disabled = true
+		add_child(trunk)
+		_trunk_pool.append(trunk)
+
+		var foliage := CollisionShape3D.new()
+		foliage.name = "FoliageLOS_%03d" % i
+		foliage.shape = foliage_shape
+		foliage.disabled = true
+		_foliage_body.add_child(foliage)
+		_foliage_pool.append(foliage)
 
 func refresh_collisions() -> void:
 	if _forest == null or _player == null:
@@ -59,12 +81,16 @@ func refresh_collisions() -> void:
 		return float(a.distance_squared) < float(b.distance_squared)
 	)
 
-	var active_count := mini(_pool.size(), nearby.size())
-	for i in _pool.size():
-		var collision := _pool[i]
+	var active_count := mini(_trunk_pool.size(), nearby.size())
+	for i in _trunk_pool.size():
+		var trunk := _trunk_pool[i]
+		var foliage := _foliage_pool[i]
 		if i < active_count:
 			var tree_position: Vector3 = nearby[i].position
-			collision.position = Vector3(tree_position.x, tree_position.y + trunk_height * 0.5, tree_position.z)
-			collision.disabled = false
+			trunk.position = Vector3(tree_position.x, tree_position.y + trunk_height * 0.5, tree_position.z)
+			trunk.disabled = false
+			foliage.position = Vector3(tree_position.x, tree_position.y + foliage_height, tree_position.z)
+			foliage.disabled = false
 		else:
-			collision.disabled = true
+			trunk.disabled = true
+			foliage.disabled = true
