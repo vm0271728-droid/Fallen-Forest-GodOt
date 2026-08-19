@@ -20,8 +20,11 @@ func play_and_recover(player: CharacterBody3D, locust: Node3D, terrain: Node) ->
 
 	var head := player.get_node("Head") as Node3D
 	var viewmodel := player.get_node_or_null("ViewmodelLayer/ViewmodelContainer/ViewmodelViewport/ViewmodelWorld") as Node3D
-	var arms := viewmodel.get_node_or_null("ArmsRoot") as Node3D if viewmodel != null else null
-	var flashlight_visual := viewmodel.get_node_or_null("FlashlightVisualRoot/CanonicalFlashlight") as Node3D if viewmodel != null else null
+	var arms: Node3D = null
+	var flashlight_visual: Node3D = null
+	if viewmodel != null:
+		arms = viewmodel.get_node_or_null("ArmsRoot") as Node3D
+		flashlight_visual = viewmodel.get_node_or_null("FlashlightVisualRoot/CanonicalFlashlight") as Node3D
 	var flashlight_rig := player.get_node_or_null("Head/Camera3D/FlashlightRig")
 
 	var head_position := head.position
