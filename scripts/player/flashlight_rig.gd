@@ -1,5 +1,7 @@
 extends Node3D
 
+const FLASHLIGHT_MODEL := preload("res://assets/player/flashlight/source/flashlightfbx.fbx")
+
 @export var acquired_at_start := false
 @export var horizontal_lag := 0.0017
 @export var vertical_lag := 0.0012
@@ -8,12 +10,12 @@ extends Node3D
 @export var return_speed := 9.0
 
 @onready var light: SpotLight3D = $SpotLight3D
-@onready var visual_root: Node3D = get_node_or_null("CanonicalFlashlight") as Node3D
 
 var acquired := false
 var placed_for_ending := false
 var _lag_target := Vector2.ZERO
 var _lag_current := Vector2.ZERO
+var _ending_visual: Node3D
 
 func _ready() -> void:
 	acquired = acquired_at_start
@@ -35,9 +37,9 @@ func feed_look_delta(delta_pixels: Vector2) -> void:
 	_lag_target.x = clampf(_lag_target.x + delta_pixels.x * horizontal_lag, -max_lag, max_lag)
 	_lag_target.y = clampf(_lag_target.y + delta_pixels.y * vertical_lag, -max_lag * 0.75, max_lag * 0.75)
 
-func acquire() -> void:
+func acquire(turn_on := true) -> void:
 	acquired = true
-	_apply_state()
+	light.visible = turn_on
 
 func set_enabled(enabled: bool) -> void:
 	if not acquired:
@@ -58,13 +60,14 @@ func place_for_ending(world_position: Vector3, direction: Vector3) -> void:
 		forward = Vector3.FORWARD
 	look_at(global_position + forward, Vector3.UP)
 	light.visible = true
-	if visual_root != null:
-		visual_root.visible = true
+
+	_ending_visual = FLASHLIGHT_MODEL.instantiate() as Node3D
+	if _ending_visual != null:
+		add_child(_ending_visual)
+		_ending_visual.rotation_degrees = Vector3(-90.0, 0.0, 0.0)
 
 func _apply_state() -> void:
 	light.visible = acquired
-	if visual_root != null:
-		visual_root.visible = acquired
 
 func beam_origin() -> Vector3:
 	return light.global_position
