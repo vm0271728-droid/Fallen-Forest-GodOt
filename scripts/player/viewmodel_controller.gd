@@ -1,9 +1,9 @@
 extends Node3D
 
-const DOCUMENT_DURATIONS := PackedFloat32Array([2.12, 2.34, 2.56])
-const DOCUMENT_SIDE_OFFSETS := PackedFloat32Array([-0.055, -0.025, -0.075])
-const DOCUMENT_ROLL_DEGREES := PackedFloat32Array([-12.0, -4.0, -18.0])
-const DOCUMENT_PITCH_DEGREES := PackedFloat32Array([-8.0, 4.0, -2.0])
+const DOCUMENT_DURATIONS = [2.12, 2.34, 2.56]
+const DOCUMENT_SIDE_OFFSETS = [-0.055, -0.025, -0.075]
+const DOCUMENT_ROLL_DEGREES = [-12.0, -4.0, -18.0]
+const DOCUMENT_PITCH_DEGREES = [-8.0, 4.0, -2.0]
 
 @export var viewmodel_fov := 61.0
 @export var pickup_duration := 2.55
@@ -55,7 +55,6 @@ func _process(delta: float) -> void:
 	var sway: Vector2 = run_sway_amplitude if running else walk_sway_amplitude
 	var movement_weight: float = final_ratio if running else walk_ratio
 
-	# Two mixed frequencies avoid a generic weapon-bob sine loop.
 	var side: float = (sin(_time * 7.1) * 0.62 + sin(_time * 3.8 + 1.1) * 0.38) * sway.x * movement_weight
 	var vertical: float = (absf(sin(_time * 6.4 + 0.35)) - 0.48) * sway.y * movement_weight
 	var breath: float = sin(_time * 1.35) * idle_breath_amplitude * (1.0 - movement_weight * 0.55)
@@ -115,10 +114,10 @@ func play_document_pickup(variant: int) -> void:
 	document_visual_root.visible = true
 
 	var variant_id: int = posmod(variant, 3)
-	var duration: float = DOCUMENT_DURATIONS[variant_id]
-	var side_offset: float = DOCUMENT_SIDE_OFFSETS[variant_id]
-	var roll: float = deg_to_rad(DOCUMENT_ROLL_DEGREES[variant_id])
-	var pitch: float = deg_to_rad(DOCUMENT_PITCH_DEGREES[variant_id])
+	var duration: float = float(DOCUMENT_DURATIONS[variant_id])
+	var side_offset: float = float(DOCUMENT_SIDE_OFFSETS[variant_id])
+	var roll: float = deg_to_rad(float(DOCUMENT_ROLL_DEGREES[variant_id]))
+	var pitch: float = deg_to_rad(float(DOCUMENT_PITCH_DEGREES[variant_id]))
 
 	document_visual_root.position = _document_base + Vector3(-0.42, -0.42, -0.12)
 	document_visual_root.rotation = Vector3(deg_to_rad(26.0), deg_to_rad(-18.0), deg_to_rad(-24.0))
