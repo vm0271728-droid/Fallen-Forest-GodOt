@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=13 format=3]
 
 [ext_resource type="Script" path="res://scripts/main/main.gd" id="1_main"]
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="2_player"]
@@ -9,6 +9,9 @@
 [ext_resource type="PackedScene" path="res://scenes/documents/document_pickup.tscn" id="7_doc_scene"]
 [ext_resource type="Script" path="res://scripts/ui/hud.gd" id="8_hud"]
 [ext_resource type="PackedScene" path="res://scenes/player/flashlight_pickup.tscn" id="9_flash_pickup"]
+[ext_resource type="Script" path="res://scripts/horror/event_director.gd" id="10_horror"]
+[ext_resource type="PackedScene" path="res://scenes/horror/locust.tscn" id="11_locust"]
+[ext_resource type="PackedScene" path="res://scenes/horror/boiled_one.tscn" id="12_boiled"]
 
 [sub_resource type="Environment" id="Environment_forest"]
 background_mode = 1
@@ -53,6 +56,14 @@ collision_mask = 1
 [node name="FlashlightPickup" parent="." instance=ExtResource("9_flash_pickup")]
 position = Vector3(2.8, 0.16, 1.5)
 rotation_degrees = Vector3(0, 22, 0)
+
+[node name="HorrorDirector" type="Node" parent="."]
+script = ExtResource("10_horror")
+player_path = NodePath("../Player")
+terrain_path = NodePath("../Terrain")
+forest_path = NodePath("../ForestBlockout")
+locust_scene = ExtResource("11_locust")
+boiled_scene = ExtResource("12_boiled")
 
 [node name="HUD" type="CanvasLayer" parent="."]
 layer = 15
