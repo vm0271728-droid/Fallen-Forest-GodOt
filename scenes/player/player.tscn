@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/player/player.gd" id="1_player"]
 [ext_resource type="Script" path="res://scripts/player/flashlight_rig.gd" id="2_flashlight"]
@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" path="res://assets/player/flashlight/source/flashlightfbx.fbx" id="4_flashlight_model"]
 [ext_resource type="Script" path="res://scripts/player/viewmodel_controller.gd" id="5_viewmodel"]
 [ext_resource type="PackedScene" path="res://assets/props/documents/source/document_file_folder (1).glb" id="6_document"]
+[ext_resource type="Script" path="res://scripts/player/fps_hand_rig.gd" id="7_hand_rig"]
 
 [sub_resource type="CapsuleShape3D" id="Capsule_player"]
 radius = 0.33
@@ -78,6 +79,9 @@ shadow_enabled = false
 position = Vector3(0, -0.18, -0.42)
 
 [node name="CanonicalArms" parent="ViewmodelLayer/ViewmodelContainer/ViewmodelViewport/ViewmodelWorld/ArmsRoot" instance=ExtResource("3_arms")]
+
+[node name="HandRig" type="Node" parent="ViewmodelLayer/ViewmodelContainer/ViewmodelViewport/ViewmodelWorld"]
+script = ExtResource("7_hand_rig")
 
 [node name="FlashlightVisualRoot" type="Node3D" parent="ViewmodelLayer/ViewmodelContainer/ViewmodelViewport/ViewmodelWorld"]
 position = Vector3(0.18, -0.15, -0.50)
