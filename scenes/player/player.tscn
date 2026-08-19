@@ -1,0 +1,38 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/player/player.gd" id="1_player"]
+[ext_resource type="Script" path="res://scripts/player/flashlight_rig.gd" id="2_flashlight"]
+
+[sub_resource type="CapsuleShape3D" id="Capsule_player"]
+radius = 0.33
+height = 1.76
+
+[node name="Player" type="CharacterBody3D"]
+script = ExtResource("1_player")
+floor_max_angle = 0.802851
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+position = Vector3(0, 0.88, 0)
+shape = SubResource("Capsule_player")
+
+[node name="Head" type="Node3D" parent="."]
+position = Vector3(0, 1.62, 0)
+
+[node name="Camera3D" type="Camera3D" parent="Head"]
+current = true
+fov = 75.0
+near = 0.05
+far = 105.0
+
+[node name="FlashlightRig" type="Node3D" parent="Head/Camera3D"]
+position = Vector3(0.08, -0.07, 0.12)
+script = ExtResource("2_flashlight")
+
+[node name="SpotLight3D" type="SpotLight3D" parent="Head/Camera3D/FlashlightRig"]
+visible = false
+light_color = Color(0.91, 0.94, 0.98, 1)
+light_energy = 5.0
+shadow_enabled = true
+spot_range = 55.0
+spot_angle = 53.0
+spot_angle_attenuation = 0.8
