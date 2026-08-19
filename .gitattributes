@@ -1,0 +1,14 @@
+*.fbx binary
+*.glb binary
+*.gltf text
+*.obj text
+*.mtl text
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.wav binary
+*.mp3 binary
+*.ogg binary
+*.mp4 binary
+*.rar binary
