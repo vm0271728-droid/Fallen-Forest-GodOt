@@ -48,8 +48,8 @@ func build_forest() -> void:
 		push_error("Fallen Forest: no canonical tree variants could be imported.")
 		return
 
-	var pack_counts := _count_variants_by_pack(variants)
-	var pack_weights := _effective_pack_weights(pack_counts)
+	var pack_counts: Dictionary = _count_variants_by_pack(variants)
+	var pack_weights: Dictionary = _effective_pack_weights(pack_counts)
 	var transforms_by_variant: Array = []
 	transforms_by_variant.resize(variants.size())
 	for i in variants.size():
@@ -74,7 +74,7 @@ func build_forest() -> void:
 			continue
 
 		var pack := _choose_pack(rng, pack_weights)
-		var candidate_indices := _indices_for_pack(variants, pack)
+		var candidate_indices: Array[int] = _indices_for_pack(variants, pack)
 		if candidate_indices.is_empty():
 			continue
 		var variant_index := candidate_indices[rng.randi_range(0, candidate_indices.size() - 1)]
@@ -134,7 +134,7 @@ func _load_simple_variants(path: String, pack: String) -> Array[Dictionary]:
 			result.append(_make_variant(pack, str(component["name"]), component_list))
 	elif resource is Mesh:
 		var mesh := resource as Mesh
-		var component := {
+		var component: Dictionary = {
 			"name": path.get_file().get_basename(),
 			"mesh": mesh,
 			"source_transform": Transform3D.IDENTITY,
@@ -165,14 +165,11 @@ func _load_low_poly_variants(path: String) -> Array[Dictionary]:
 		elif "branch" in lower:
 			branches.append(component)
 
-	# Background_Tree_Atlas.* objects are complete lightweight trees.
 	for standalone: Dictionary in standalones:
 		var component_list: Array = [standalone]
 		result.append(_make_variant("low_poly", str(standalone["name"]), component_list))
 
-	# Main detailed trees are split into trunk + branch meshes in the pack. Pair
-	# them by source-space X/Z center so they are always scattered as one tree.
-	var used_branches := {}
+	var used_branches: Dictionary = {}
 	for trunk: Dictionary in trunks:
 		var trunk_center: Vector3 = _component_world_center(trunk)
 		var best_index := -1
@@ -220,8 +217,10 @@ func _low_poly_component_allowed(mesh_name: String) -> bool:
 	return name.begins_with("background_tree_atlas") or "trunk" in name or "branch" in name
 
 func _make_variant(pack: String, name: String, source_components: Array) -> Dictionary:
-	var bounds := _components_bounds(source_components)
-	var anchor := Vector3((bounds.min.x + bounds.max.x) * 0.5, bounds.min.y, (bounds.min.z + bounds.max.z) * 0.5)
+	var bounds: Dictionary = _components_bounds(source_components)
+	var min_v: Vector3 = bounds["min"]
+	var max_v: Vector3 = bounds["max"]
+	var anchor := Vector3((min_v.x + max_v.x) * 0.5, min_v.y, (min_v.z + max_v.z) * 0.5)
 	var normalized_components: Array = []
 	for source_variant in source_components:
 		var source_component: Dictionary = source_variant
@@ -235,7 +234,7 @@ func _make_variant(pack: String, name: String, source_components: Array) -> Dict
 		"pack": pack,
 		"name": name,
 		"components": normalized_components,
-		"height": maxf(0.01, bounds.max.y - bounds.min.y),
+		"height": maxf(0.01, max_v.y - min_v.y),
 	}
 
 func _components_bounds(source_components: Array) -> Dictionary:
