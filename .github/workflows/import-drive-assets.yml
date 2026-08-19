@@ -1,0 +1,54 @@
+name: Import canonical Drive assets
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/import-drive-assets.yml"
+      - "tools/import_drive_assets.py"
+
+permissions:
+  contents: write
+
+jobs:
+  import-assets:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Drive downloader
+        run: python -m pip install --disable-pip-version-check gdown
+
+      - name: Download canonical owner archives
+        run: |
+          python -m gdown 1W9RzSrC8SWn1BJCa_i0OU2Wkk0L0LQe6 -O /tmp/fallen_forest_all.zip
+          python -m gdown 11nhh2Q0djgdQm653EQkWJjqSpdJ9SEFk -O /tmp/fallen_forest_trees.zip
+
+      - name: Extract models, textures and approved media
+        run: |
+          python tools/import_drive_assets.py \
+            --all /tmp/fallen_forest_all.zip \
+            --trees /tmp/fallen_forest_trees.zip
+
+      - name: Verify forbidden screamer is absent
+        run: |
+          if find assets -type f -iname '*amazing-grace*' | grep -q .; then
+            echo 'Forbidden Amazing Grace asset was imported.' >&2
+            exit 1
+          fi
+
+      - name: Commit imported source assets
+        run: |
+          git config user.name "Fallen Forest Asset Importer"
+          git config user.email "actions@users.noreply.github.com"
+          git add assets docs/ASSET_INVENTORY.md
+          if git diff --cached --quiet; then
+            echo "No asset changes to commit."
+            exit 0
+          fi
+          git commit -m "Import canonical source assets from project Drive"
+          git push origin HEAD:main
