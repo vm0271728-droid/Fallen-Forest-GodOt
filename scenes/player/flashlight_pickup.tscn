@@ -1,17 +1,7 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/player/flashlight_pickup.gd" id="1_script"]
-
-[sub_resource type="CylinderMesh" id="Cylinder_flashlight"]
-top_radius = 0.08
-bottom_radius = 0.1
-height = 0.42
-radial_segments = 12
-
-[sub_resource type="StandardMaterial3D" id="Material_flashlight"]
-albedo_color = Color(0.07, 0.075, 0.08, 1)
-metallic = 0.75
-roughness = 0.28
+[ext_resource type="PackedScene" path="res://assets/player/flashlight/source/flashlightfbx.fbx" id="2_model"]
 
 [sub_resource type="SphereShape3D" id="Shape_pickup"]
 radius = 0.72
@@ -21,10 +11,9 @@ script = ExtResource("1_script")
 collision_layer = 0
 collision_mask = 1
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+[node name="CanonicalModel" parent="." instance=ExtResource("2_model")]
+position = Vector3(0, 0.04, 0)
 rotation_degrees = Vector3(0, 0, 90)
-mesh = SubResource("Cylinder_flashlight")
-material_override = SubResource("Material_flashlight")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 shape = SubResource("Shape_pickup")
