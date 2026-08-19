@@ -1,13 +1,7 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/documents/document_pickup.gd" id="1_script"]
-
-[sub_resource type="BoxMesh" id="BoxMesh_doc"]
-size = Vector3(0.34, 0.04, 0.25)
-
-[sub_resource type="StandardMaterial3D" id="Material_doc"]
-albedo_color = Color(0.33, 0.23, 0.13, 1)
-roughness = 0.86
+[ext_resource type="PackedScene" path="res://assets/props/documents/source/document_file_folder (1).glb" id="2_model"]
 
 [sub_resource type="BoxShape3D" id="BoxShape_doc"]
 size = Vector3(0.62, 0.45, 0.58)
@@ -17,10 +11,9 @@ script = ExtResource("1_script")
 collision_layer = 0
 collision_mask = 1
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
-position = Vector3(0, 0.03, 0)
-mesh = SubResource("BoxMesh_doc")
-material_override = SubResource("Material_doc")
+[node name="CanonicalModel" parent="." instance=ExtResource("2_model")]
+position = Vector3(0, 0.02, 0)
+scale = Vector3(0.07, 0.07, 0.07)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 position = Vector3(0, 0.22, 0)
