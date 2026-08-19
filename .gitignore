@@ -1,0 +1,19 @@
+# Godot 4 generated/imported data
+.godot/
+.import/
+
+# Export/build outputs
+builds/
+exports/
+*.apk
+*.aab
+
+# Editor/OS noise
+.DS_Store
+Thumbs.db
+*.tmp
+*.log
+
+# Local scratch and source archives
+_work/
+*.blend1
