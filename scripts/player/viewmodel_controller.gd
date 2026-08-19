@@ -1,5 +1,10 @@
 extends Node3D
 
+const DOCUMENT_DURATIONS := PackedFloat32Array([2.12, 2.34, 2.56])
+const DOCUMENT_SIDE_OFFSETS := PackedFloat32Array([-0.055, -0.025, -0.075])
+const DOCUMENT_ROLL_DEGREES := PackedFloat32Array([-12.0, -4.0, -18.0])
+const DOCUMENT_PITCH_DEGREES := PackedFloat32Array([-8.0, 4.0, -2.0])
+
 @export var viewmodel_fov := 61.0
 @export var pickup_duration := 2.55
 @export var flashlight_light_delay := 0.08
@@ -43,18 +48,18 @@ func _process(delta: float) -> void:
 	if _pickup_playing or _document_playing or _player == null:
 		return
 
-	var flat_speed := Vector2(_player.velocity.x, _player.velocity.z).length()
-	var walk_ratio := clampf(flat_speed / 3.25, 0.0, 1.0)
-	var final_ratio := clampf(flat_speed / 6.5, 0.0, 1.0)
-	var running := flat_speed > 4.2
-	var sway := run_sway_amplitude if running else walk_sway_amplitude
-	var movement_weight := final_ratio if running else walk_ratio
+	var flat_speed: float = Vector2(_player.velocity.x, _player.velocity.z).length()
+	var walk_ratio: float = clampf(flat_speed / 3.25, 0.0, 1.0)
+	var final_ratio: float = clampf(flat_speed / 6.5, 0.0, 1.0)
+	var running: bool = flat_speed > 4.2
+	var sway: Vector2 = run_sway_amplitude if running else walk_sway_amplitude
+	var movement_weight: float = final_ratio if running else walk_ratio
 
 	# Two mixed frequencies avoid a generic weapon-bob sine loop.
-	var side := (sin(_time * 7.1) * 0.62 + sin(_time * 3.8 + 1.1) * 0.38) * sway.x * movement_weight
-	var vertical := (abs(sin(_time * 6.4 + 0.35)) - 0.48) * sway.y * movement_weight
-	var breath := sin(_time * 1.35) * idle_breath_amplitude * (1.0 - movement_weight * 0.55)
-	var target := _arms_base + Vector3(side, vertical + breath, 0.0)
+	var side: float = (sin(_time * 7.1) * 0.62 + sin(_time * 3.8 + 1.1) * 0.38) * sway.x * movement_weight
+	var vertical: float = (absf(sin(_time * 6.4 + 0.35)) - 0.48) * sway.y * movement_weight
+	var breath: float = sin(_time * 1.35) * idle_breath_amplitude * (1.0 - movement_weight * 0.55)
+	var target: Vector3 = _arms_base + Vector3(side, vertical + breath, 0.0)
 	arms_root.position = arms_root.position.lerp(target, 1.0 - exp(-10.0 * delta))
 
 	var flashlight_offset := Vector3(side * 0.60, vertical * 0.72 + breath * 0.45, 0.0)
@@ -91,7 +96,7 @@ func play_flashlight_pickup() -> void:
 	await get_tree().create_timer(flashlight_light_delay).timeout
 	_world_flashlight_rig.call("set_enabled", true)
 
-	var settle_time := maxf(0.12, pickup_duration - 1.48 - 0.34 - 0.24 - flashlight_light_delay)
+	var settle_time: float = maxf(0.12, pickup_duration - 1.48 - 0.34 - 0.24 - flashlight_light_delay)
 	var settle := create_tween().set_parallel(true)
 	settle.tween_property(flashlight_visual_root, "position", _flashlight_base, settle_time).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	settle.tween_property(flashlight_visual_root, "rotation", Vector3.ZERO, settle_time).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
@@ -109,30 +114,30 @@ func play_document_pickup(variant: int) -> void:
 	_player.set_controls_enabled(false)
 	document_visual_root.visible = true
 
-	var variant_id := posmod(variant, 3)
-	var duration := [2.12, 2.34, 2.56][variant_id]
-	var side_offset := [-0.055, -0.025, -0.075][variant_id]
-	var roll := [deg_to_rad(-12.0), deg_to_rad(-4.0), deg_to_rad(-18.0)][variant_id]
-	var pitch := [deg_to_rad(-8.0), deg_to_rad(4.0), deg_to_rad(-2.0)][variant_id]
+	var variant_id: int = posmod(variant, 3)
+	var duration: float = DOCUMENT_DURATIONS[variant_id]
+	var side_offset: float = DOCUMENT_SIDE_OFFSETS[variant_id]
+	var roll: float = deg_to_rad(DOCUMENT_ROLL_DEGREES[variant_id])
+	var pitch: float = deg_to_rad(DOCUMENT_PITCH_DEGREES[variant_id])
 
 	document_visual_root.position = _document_base + Vector3(-0.42, -0.42, -0.12)
 	document_visual_root.rotation = Vector3(deg_to_rad(26.0), deg_to_rad(-18.0), deg_to_rad(-24.0))
 	arms_root.position = _arms_base + Vector3(-0.05, -0.12, 0.04)
 
-	var raise_time := duration * 0.56
+	var raise_time: float = duration * 0.56
 	var raise := create_tween().set_parallel(true)
 	raise.tween_property(document_visual_root, "position", _document_base + Vector3(side_offset, -0.02, 0.02), raise_time).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	raise.tween_property(document_visual_root, "rotation", Vector3(pitch, deg_to_rad(-3.0), roll), raise_time).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	raise.tween_property(arms_root, "position", _arms_base + Vector3(-0.018, -0.025, 0.02), raise_time).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	await raise.finished
 
-	var grip_time := duration * 0.20
+	var grip_time: float = duration * 0.20
 	var grip := create_tween()
 	grip.tween_property(arms_root, "position", _arms_base + Vector3(0.008, -0.008, 0.018), grip_time * 0.55).set_trans(Tween.TRANS_SINE)
 	grip.tween_property(arms_root, "position", _arms_base, grip_time * 0.45).set_trans(Tween.TRANS_SINE)
 	await grip.finished
 
-	var lower_time := maxf(0.22, duration - raise_time - grip_time)
+	var lower_time: float = maxf(0.22, duration - raise_time - grip_time)
 	var lower := create_tween().set_parallel(true)
 	lower.tween_property(document_visual_root, "position", _document_base + Vector3(-0.16, -0.55, -0.08), lower_time).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	lower.tween_property(document_visual_root, "rotation", Vector3(deg_to_rad(18.0), 0.0, deg_to_rad(-8.0)), lower_time).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
