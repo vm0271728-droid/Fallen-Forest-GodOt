@@ -11,13 +11,17 @@ extends Node3D
 @onready var arms_root: Node3D = $ArmsRoot
 @onready var flashlight_visual_root: Node3D = $FlashlightVisualRoot
 @onready var flashlight_model: Node3D = $FlashlightVisualRoot/CanonicalFlashlight
+@onready var document_visual_root: Node3D = $DocumentVisualRoot
+@onready var document_model: Node3D = $DocumentVisualRoot/CanonicalDocument
 
 var _player: CharacterBody3D
 var _world_flashlight_rig: Node3D
 var _arms_base := Vector3.ZERO
 var _flashlight_base := Vector3.ZERO
+var _document_base := Vector3.ZERO
 var _time := 0.0
 var _pickup_playing := false
+var _document_playing := false
 
 func _ready() -> void:
 	_player = get_node("../../../..") as CharacterBody3D
@@ -25,6 +29,8 @@ func _ready() -> void:
 	viewmodel_camera.fov = viewmodel_fov
 	_arms_base = arms_root.position
 	_flashlight_base = flashlight_visual_root.position
+	_document_base = document_visual_root.position
+	document_visual_root.visible = false
 	_sync_flashlight_visibility()
 
 func _process(delta: float) -> void:
@@ -34,7 +40,7 @@ func _process(delta: float) -> void:
 		flashlight_visual_root.rotation.y = _world_flashlight_rig.rotation.y
 	_sync_flashlight_visibility()
 
-	if _pickup_playing or _player == null:
+	if _pickup_playing or _document_playing or _player == null:
 		return
 
 	var flat_speed := Vector2(_player.velocity.x, _player.velocity.z).length()
@@ -55,7 +61,7 @@ func _process(delta: float) -> void:
 	flashlight_visual_root.position = flashlight_visual_root.position.lerp(_flashlight_base + flashlight_offset, 1.0 - exp(-11.0 * delta))
 
 func play_flashlight_pickup() -> void:
-	if _pickup_playing or _world_flashlight_rig == null:
+	if _pickup_playing or _document_playing or _world_flashlight_rig == null:
 		return
 	if bool(_world_flashlight_rig.get("acquired")):
 		return
@@ -76,7 +82,6 @@ func play_flashlight_pickup() -> void:
 	lift.tween_property(flashlight_visual_root, "rotation", Vector3(deg_to_rad(4.0), deg_to_rad(-2.5), deg_to_rad(2.0)), 1.48).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	await lift.finished
 
-	# Small re-grip before the thumb switch moment.
 	var regrip := create_tween()
 	regrip.tween_property(arms_root, "position", _arms_base + Vector3(0.006, -0.010, 0.015), 0.34).set_trans(Tween.TRANS_SINE)
 	regrip.tween_property(arms_root, "position", _arms_base, 0.24).set_trans(Tween.TRANS_SINE)
@@ -97,8 +102,53 @@ func play_flashlight_pickup() -> void:
 	_player.set_controls_enabled(true)
 	_sync_flashlight_visibility()
 
+func play_document_pickup(variant: int) -> void:
+	if _document_playing or _pickup_playing:
+		return
+	_document_playing = true
+	_player.set_controls_enabled(false)
+	document_visual_root.visible = true
+
+	var variant_id := posmod(variant, 3)
+	var duration := [2.12, 2.34, 2.56][variant_id]
+	var side_offset := [-0.055, -0.025, -0.075][variant_id]
+	var roll := [deg_to_rad(-12.0), deg_to_rad(-4.0), deg_to_rad(-18.0)][variant_id]
+	var pitch := [deg_to_rad(-8.0), deg_to_rad(4.0), deg_to_rad(-2.0)][variant_id]
+
+	document_visual_root.position = _document_base + Vector3(-0.42, -0.42, -0.12)
+	document_visual_root.rotation = Vector3(deg_to_rad(26.0), deg_to_rad(-18.0), deg_to_rad(-24.0))
+	arms_root.position = _arms_base + Vector3(-0.05, -0.12, 0.04)
+
+	var raise_time := duration * 0.56
+	var raise := create_tween().set_parallel(true)
+	raise.tween_property(document_visual_root, "position", _document_base + Vector3(side_offset, -0.02, 0.02), raise_time).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	raise.tween_property(document_visual_root, "rotation", Vector3(pitch, deg_to_rad(-3.0), roll), raise_time).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	raise.tween_property(arms_root, "position", _arms_base + Vector3(-0.018, -0.025, 0.02), raise_time).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	await raise.finished
+
+	var grip_time := duration * 0.20
+	var grip := create_tween()
+	grip.tween_property(arms_root, "position", _arms_base + Vector3(0.008, -0.008, 0.018), grip_time * 0.55).set_trans(Tween.TRANS_SINE)
+	grip.tween_property(arms_root, "position", _arms_base, grip_time * 0.45).set_trans(Tween.TRANS_SINE)
+	await grip.finished
+
+	var lower_time := maxf(0.22, duration - raise_time - grip_time)
+	var lower := create_tween().set_parallel(true)
+	lower.tween_property(document_visual_root, "position", _document_base + Vector3(-0.16, -0.55, -0.08), lower_time).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	lower.tween_property(document_visual_root, "rotation", Vector3(deg_to_rad(18.0), 0.0, deg_to_rad(-8.0)), lower_time).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	lower.tween_property(arms_root, "position", _arms_base, lower_time).set_trans(Tween.TRANS_SINE)
+	await lower.finished
+
+	document_visual_root.visible = false
+	document_visual_root.position = _document_base
+	document_visual_root.rotation = Vector3.ZERO
+	arms_root.position = _arms_base
+	_document_playing = false
+	_player.set_controls_enabled(true)
+
 func hide_for_ending() -> void:
 	flashlight_model.visible = false
+	document_visual_root.visible = false
 
 func _sync_flashlight_visibility() -> void:
 	if flashlight_model == null or _world_flashlight_rig == null:
