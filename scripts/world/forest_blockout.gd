@@ -2,6 +2,12 @@ extends Node3D
 
 const SPRUCE_PATH := "res://assets/environment/trees/black_spruce/zzz_LODs/LOD2/Picea mariana HD_Arctic mat 100_LOD2.fbx"
 const DEAD_FIRS_PATH := "res://assets/environment/trees/dead_firs/firs.obj"
+const DEAD_FIR_VARIANT_PATHS := [
+	"res://assets/environment/trees/dead_firs/variants/fir_1.obj",
+	"res://assets/environment/trees/dead_firs/variants/fir_2.obj",
+	"res://assets/environment/trees/dead_firs/variants/fir_3.obj",
+	"res://assets/environment/trees/dead_firs/variants/fir_4.obj",
+]
 const LOW_POLY_PATH := "res://assets/environment/trees/low_poly_pack/source/Tree_Pack.fbx"
 
 @export var tree_count := 3250
@@ -34,7 +40,15 @@ func build_forest() -> void:
 
 	var variants: Array[Dictionary] = []
 	variants.append_array(_load_pack_variants(SPRUCE_PATH, "spruce"))
-	variants.append_array(_load_pack_variants(DEAD_FIRS_PATH, "dead_fir"))
+
+	var split_dead_firs_loaded := false
+	for dead_path: String in DEAD_FIR_VARIANT_PATHS:
+		if ResourceLoader.exists(dead_path):
+			variants.append_array(_load_pack_variants(dead_path, "dead_fir"))
+			split_dead_firs_loaded = true
+	if not split_dead_firs_loaded:
+		variants.append_array(_load_pack_variants(DEAD_FIRS_PATH, "dead_fir"))
+
 	if ResourceLoader.exists(LOW_POLY_PATH):
 		variants.append_array(_load_pack_variants(LOW_POLY_PATH, "low_poly"))
 
@@ -151,7 +165,6 @@ func _mesh_allowed(pack: String, mesh_name: String) -> bool:
 	for included: String in ["tree", "fir", "pine", "spruce", "trunk", "branch"]:
 		if included in name:
 			return true
-	# Conservative rule: unknown low-poly objects are excluded until inspected.
 	return false
 
 func _normalized_source_transform(mesh: Mesh, source_transform: Transform3D) -> Dictionary:
