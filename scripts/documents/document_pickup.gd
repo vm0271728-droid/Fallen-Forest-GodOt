@@ -7,13 +7,20 @@ var _collected := false
 
 func configure(document_slot: int) -> void:
 	slot = document_slot
+	var fireflies := get_node_or_null("Fireflies")
+	if fireflies != null and fireflies.has_method("configure"):
+		fireflies.call("configure", slot)
 	if GameState.is_document_collected(slot):
 		queue_free()
 
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
-	if slot >= 0 and GameState.is_document_collected(slot):
-		queue_free()
+	if slot >= 0:
+		var fireflies := get_node_or_null("Fireflies")
+		if fireflies != null and fireflies.has_method("configure"):
+			fireflies.call("configure", slot)
+		if GameState.is_document_collected(slot):
+			queue_free()
 
 func _on_body_entered(body: Node3D) -> void:
 	if _collected or slot < 0 or not body.has_method("save_current_position"):
@@ -23,6 +30,9 @@ func _on_body_entered(body: Node3D) -> void:
 	var world_visual := get_node_or_null("CanonicalModel") as Node3D
 	if world_visual != null:
 		world_visual.visible = false
+	var fireflies := get_node_or_null("Fireflies") as Node3D
+	if fireflies != null:
+		fireflies.visible = false
 
 	var viewmodel := body.get_node_or_null("ViewmodelLayer/ViewmodelContainer/ViewmodelViewport/ViewmodelWorld")
 	if viewmodel != null and viewmodel.has_method("play_document_pickup"):
@@ -34,6 +44,8 @@ func _on_body_entered(body: Node3D) -> void:
 		_collected = false
 		if world_visual != null:
 			world_visual.visible = true
+		if fireflies != null:
+			fireflies.visible = true
 		return
 
 	if SaveSystem.mark_document(slot, body.global_position):
@@ -42,3 +54,5 @@ func _on_body_entered(body: Node3D) -> void:
 		_collected = false
 		if world_visual != null:
 			world_visual.visible = true
+		if fireflies != null:
+			fireflies.visible = true
