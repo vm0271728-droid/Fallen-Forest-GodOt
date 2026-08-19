@@ -1,15 +1,16 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/player/player.gd" id="1_player"]
 [ext_resource type="Script" path="res://scripts/player/flashlight_rig.gd" id="2_flashlight"]
 [ext_resource type="PackedScene" path="res://assets/player/arms/source/fpsarms.fbx" id="3_arms"]
 [ext_resource type="PackedScene" path="res://assets/player/flashlight/source/flashlightfbx.fbx" id="4_flashlight_model"]
+[ext_resource type="Script" path="res://scripts/player/viewmodel_controller.gd" id="5_viewmodel"]
 
 [sub_resource type="CapsuleShape3D" id="Capsule_player"]
 radius = 0.33
 height = 1.76
 
-[node name="Player" type="CharacterBody3D"]
+[node name="Player" type="CharacterBody3D" groups=["ff_player"]]
 script = ExtResource("1_player")
 floor_max_angle = 0.802851
 
@@ -26,17 +27,9 @@ fov = 75.0
 near = 0.05
 far = 105.0
 
-[node name="ViewmodelRoot" type="Node3D" parent="Head/Camera3D"]
-position = Vector3(0, -0.18, -0.38)
-
-[node name="CanonicalArms" parent="Head/Camera3D/ViewmodelRoot" instance=ExtResource("3_arms")]
-
 [node name="FlashlightRig" type="Node3D" parent="Head/Camera3D"]
 position = Vector3(0.18, -0.15, -0.38)
 script = ExtResource("2_flashlight")
-
-[node name="CanonicalFlashlight" parent="Head/Camera3D/FlashlightRig" instance=ExtResource("4_flashlight_model")]
-rotation_degrees = Vector3(-90, 0, 0)
 
 [node name="SpotLight3D" type="SpotLight3D" parent="Head/Camera3D/FlashlightRig"]
 position = Vector3(0, 0, -0.20)
@@ -47,3 +40,46 @@ shadow_enabled = true
 spot_range = 55.0
 spot_angle = 53.0
 spot_angle_attenuation = 0.8
+
+[node name="ViewmodelLayer" type="CanvasLayer" parent="."]
+layer = 10
+
+[node name="ViewmodelContainer" type="SubViewportContainer" parent="ViewmodelLayer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+stretch = true
+
+[node name="ViewmodelViewport" type="SubViewport" parent="ViewmodelLayer/ViewmodelContainer"]
+transparent_bg = true
+own_world_3d = true
+size = Vector2i(1280, 720)
+
+[node name="ViewmodelWorld" type="Node3D" parent="ViewmodelLayer/ViewmodelContainer/ViewmodelViewport"]
+script = ExtResource("5_viewmodel")
+
+[node name="ViewmodelCamera" type="Camera3D" parent="ViewmodelLayer/ViewmodelContainer/ViewmodelViewport/ViewmodelWorld"]
+current = true
+fov = 61.0
+near = 0.01
+far = 10.0
+
+[node name="ViewmodelLight" type="DirectionalLight3D" parent="ViewmodelLayer/ViewmodelContainer/ViewmodelViewport/ViewmodelWorld"]
+rotation_degrees = Vector3(-28, -34, 0)
+light_color = Color(0.84, 0.89, 1, 1)
+light_energy = 1.15
+shadow_enabled = false
+
+[node name="ArmsRoot" type="Node3D" parent="ViewmodelLayer/ViewmodelContainer/ViewmodelViewport/ViewmodelWorld"]
+position = Vector3(0, -0.18, -0.42)
+
+[node name="CanonicalArms" parent="ViewmodelLayer/ViewmodelContainer/ViewmodelViewport/ViewmodelWorld/ArmsRoot" instance=ExtResource("3_arms")]
+
+[node name="FlashlightVisualRoot" type="Node3D" parent="ViewmodelLayer/ViewmodelContainer/ViewmodelViewport/ViewmodelWorld"]
+position = Vector3(0.18, -0.15, -0.50)
+
+[node name="CanonicalFlashlight" parent="ViewmodelLayer/ViewmodelContainer/ViewmodelViewport/ViewmodelWorld/FlashlightVisualRoot" instance=ExtResource("4_flashlight_model")]
+rotation_degrees = Vector3(-90, 0, 0)
