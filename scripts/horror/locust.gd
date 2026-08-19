@@ -13,6 +13,10 @@ enum State { HIDE, RETREAT, RAGE, CHASE }
 @export var attack_distance := 1.65
 @export var hide_duration := Vector2(1.8, 3.6)
 @export var retreat_duration := Vector2(1.4, 2.4)
+@export var far_hide_distance := 31.0
+@export var medium_hide_distance := 23.0
+
+@onready var rig_animator: Node = $RigAnimator
 
 var state: int = State.HIDE
 var final_chase := false
@@ -20,6 +24,7 @@ var _player: CharacterBody3D
 var _initial_distance := 0.0
 var _state_until := 0.0
 var _caught := false
+var _hide_variant := 0
 
 func _ready() -> void:
 	add_to_group("ff_monster")
@@ -32,6 +37,7 @@ func begin_encounter(player: CharacterBody3D, is_final_chase := false) -> void:
 	if final_chase:
 		_enter_state(State.CHASE, 9999.0)
 	else:
+		_hide_variant = _choose_hide_variant(_initial_distance)
 		_enter_state(State.HIDE, randf_range(hide_duration.x, hide_duration.y))
 	_face_player()
 
@@ -107,9 +113,31 @@ func _process_chase(delta: float) -> void:
 	velocity.z = move_toward(velocity.z, direction.z * speed, 18.0 * delta)
 	rotation.y = lerp_angle(rotation.y, atan2(-direction.x, -direction.z), 1.0 - exp(-8.0 * delta))
 
+func _choose_hide_variant(distance: float) -> int:
+	if distance >= far_hide_distance:
+		return randi_range(0, 1)
+	if distance >= medium_hide_distance:
+		return 2
+	return randi_range(3, 4)
+
 func _enter_state(next_state: int, duration: float) -> void:
 	state = next_state
 	_state_until = _now() + duration
+	if rig_animator == null:
+		return
+	match state:
+		State.HIDE:
+			if rig_animator.has_method("set_hide_variant"):
+				rig_animator.call("set_hide_variant", _hide_variant)
+		State.RETREAT:
+			if rig_animator.has_method("set_retreat"):
+				rig_animator.call("set_retreat")
+		State.RAGE:
+			if rig_animator.has_method("set_rage"):
+				rig_animator.call("set_rage")
+		State.CHASE:
+			if rig_animator.has_method("set_chase"):
+				rig_animator.call("set_chase")
 
 func _flat_distance_to_player() -> float:
 	if _player == null:
