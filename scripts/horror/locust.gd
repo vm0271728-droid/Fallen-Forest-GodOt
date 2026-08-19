@@ -21,6 +21,10 @@ var _initial_distance := 0.0
 var _state_until := 0.0
 var _caught := false
 
+func _ready() -> void:
+	add_to_group("ff_monster")
+	add_to_group("ff_locust")
+
 func begin_encounter(player: CharacterBody3D, is_final_chase := false) -> void:
 	_player = player
 	final_chase = is_final_chase
