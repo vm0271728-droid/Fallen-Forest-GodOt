@@ -12,6 +12,7 @@ GameState="*res://scripts/core/game_state.gd"
 SaveSystem="*res://scripts/core/save_system.gd"
 Settings="*res://scripts/core/settings.gd"
 InputState="*res://scripts/input/input_state.gd"
+AudioDirector="*res://scripts/audio/audio_director.gd"
 
 [display]
 window/size/viewport_width=1920
