@@ -14,6 +14,7 @@ const DOCUMENT_PITCH_DEGREES = [-8.0, 4.0, -2.0]
 
 @onready var viewmodel_camera: Camera3D = $ViewmodelCamera
 @onready var arms_root: Node3D = $ArmsRoot
+@onready var hand_rig: Node = $HandRig
 @onready var flashlight_visual_root: Node3D = $FlashlightVisualRoot
 @onready var flashlight_model: Node3D = $FlashlightVisualRoot/CanonicalFlashlight
 @onready var document_visual_root: Node3D = $DocumentVisualRoot
@@ -27,6 +28,8 @@ var _document_base := Vector3.ZERO
 var _time := 0.0
 var _pickup_playing := false
 var _document_playing := false
+var _flashlight_bone_attached := false
+var _flashlight_grip_base_rotation := Quaternion.IDENTITY
 
 func _ready() -> void:
 	_player = get_node("../../../..") as CharacterBody3D
@@ -41,8 +44,16 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	_time += delta
 	if _world_flashlight_rig != null and not _pickup_playing:
-		flashlight_visual_root.rotation.x = _world_flashlight_rig.rotation.x
-		flashlight_visual_root.rotation.y = _world_flashlight_rig.rotation.y
+		if _flashlight_bone_attached:
+			var lag_rotation := Quaternion.from_euler(Vector3(
+				_world_flashlight_rig.rotation.x,
+				_world_flashlight_rig.rotation.y,
+				0.0
+			))
+			flashlight_model.quaternion = _flashlight_grip_base_rotation * lag_rotation
+		else:
+			flashlight_visual_root.rotation.x = _world_flashlight_rig.rotation.x
+			flashlight_visual_root.rotation.y = _world_flashlight_rig.rotation.y
 	_sync_flashlight_visibility()
 
 	if _pickup_playing or _document_playing or _player == null:
@@ -61,8 +72,9 @@ func _process(delta: float) -> void:
 	var target: Vector3 = _arms_base + Vector3(side, vertical + breath, 0.0)
 	arms_root.position = arms_root.position.lerp(target, 1.0 - exp(-10.0 * delta))
 
-	var flashlight_offset := Vector3(side * 0.60, vertical * 0.72 + breath * 0.45, 0.0)
-	flashlight_visual_root.position = flashlight_visual_root.position.lerp(_flashlight_base + flashlight_offset, 1.0 - exp(-11.0 * delta))
+	if not _flashlight_bone_attached:
+		var flashlight_offset := Vector3(side * 0.60, vertical * 0.72 + breath * 0.45, 0.0)
+		flashlight_visual_root.position = flashlight_visual_root.position.lerp(_flashlight_base + flashlight_offset, 1.0 - exp(-11.0 * delta))
 
 func play_flashlight_pickup() -> void:
 	if _pickup_playing or _document_playing or _world_flashlight_rig == null:
@@ -102,9 +114,22 @@ func play_flashlight_pickup() -> void:
 	settle.tween_property(arms_root, "position", _arms_base, settle_time).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	await settle.finished
 
+	await get_tree().process_frame
+	_try_attach_flashlight_to_right_palm()
 	_pickup_playing = false
 	_player.set_controls_enabled(true)
 	_sync_flashlight_visibility()
+
+func _try_attach_flashlight_to_right_palm() -> void:
+	if _flashlight_bone_attached or hand_rig == null:
+		return
+	if not bool(hand_rig.get("ready_for_grips")):
+		return
+	if hand_rig.has_method("attach_preserving_pose_to_right_palm"):
+		if bool(hand_rig.call("attach_preserving_pose_to_right_palm", flashlight_model)):
+			_flashlight_bone_attached = true
+			_flashlight_grip_base_rotation = flashlight_model.quaternion
+			print("Fallen Forest FPS rig: held flashlight attached to R_palm.")
 
 func play_document_pickup(variant: int) -> void:
 	if _document_playing or _pickup_playing:
@@ -150,6 +175,12 @@ func play_document_pickup(variant: int) -> void:
 	_document_playing = false
 	_player.set_controls_enabled(true)
 
+func hide_flashlight_for_death() -> void:
+	flashlight_model.visible = false
+
+func restore_flashlight_after_death() -> void:
+	_sync_flashlight_visibility()
+
 func hide_for_ending() -> void:
 	flashlight_model.visible = false
 	document_visual_root.visible = false
@@ -162,4 +193,5 @@ func _sync_flashlight_visibility() -> void:
 		return
 	var acquired := bool(_world_flashlight_rig.get("acquired"))
 	var ending := bool(_world_flashlight_rig.get("placed_for_ending"))
-	flashlight_model.visible = acquired and not ending
+	var death_dropped := bool(_world_flashlight_rig.get("death_dropped"))
+	flashlight_model.visible = acquired and not ending and not death_dropped
