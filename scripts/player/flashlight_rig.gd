@@ -8,6 +8,7 @@ extends Node3D
 @export var return_speed := 9.0
 
 @onready var light: SpotLight3D = $SpotLight3D
+@onready var visual_root: Node3D = get_node_or_null("CanonicalFlashlight") as Node3D
 
 var acquired := false
 var _lag_target := Vector2.ZERO
@@ -40,6 +41,8 @@ func set_enabled(enabled: bool) -> void:
 
 func _apply_state() -> void:
 	light.visible = acquired
+	if visual_root != null:
+		visual_root.visible = acquired
 
 func beam_origin() -> Vector3:
 	return light.global_position
