@@ -1,6 +1,6 @@
 extends Node3D
 
-const FLASHLIGHT_MODEL := preload("res://assets/player/flashlight/source/flashlightfbx.fbx")
+const FLASHLIGHT_MODEL_PATH := "res://assets/player/flashlight/source/flashlightfbx.fbx"
 
 @export var acquired_at_start := false
 @export var horizontal_lag := 0.0017
@@ -67,7 +67,7 @@ func drop_for_death(world_position: Vector3, direction: Vector3) -> void:
 		forward = Vector3.FORWARD
 	_death_prop.look_at(_death_prop.global_position + forward, Vector3.UP)
 
-	var model := FLASHLIGHT_MODEL.instantiate() as Node3D
+	var model := _instantiate_flashlight_model()
 	if model != null:
 		_death_prop.add_child(model)
 		model.rotation_degrees = Vector3(-90.0, 0.0, 0.0)
@@ -107,10 +107,17 @@ func place_for_ending(world_position: Vector3, direction: Vector3) -> void:
 	look_at(global_position + forward, Vector3.UP)
 	light.visible = true
 
-	_ending_visual = FLASHLIGHT_MODEL.instantiate() as Node3D
+	_ending_visual = _instantiate_flashlight_model()
 	if _ending_visual != null:
 		add_child(_ending_visual)
 		_ending_visual.rotation_degrees = Vector3(-90.0, 0.0, 0.0)
+
+func _instantiate_flashlight_model() -> Node3D:
+	var resource := ResourceLoader.load(FLASHLIGHT_MODEL_PATH)
+	if not resource is PackedScene:
+		push_warning("Fallen Forest: flashlight FBX is not available as PackedScene: %s" % FLASHLIGHT_MODEL_PATH)
+		return null
+	return (resource as PackedScene).instantiate() as Node3D
 
 func _apply_state() -> void:
 	light.visible = acquired
