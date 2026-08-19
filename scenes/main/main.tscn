@@ -47,7 +47,7 @@ shadow_enabled = true
 script = ExtResource("17_trails")
 terrain_path = NodePath("../Terrain")
 
-[node name="ForestBlockout" type="MultiMeshInstance3D" parent="."]
+[node name="ForestBlockout" type="Node3D" parent="."]
 script = ExtResource("5_forest")
 terrain_path = NodePath("../Terrain")
 trail_path = NodePath("../TrailNetwork")
