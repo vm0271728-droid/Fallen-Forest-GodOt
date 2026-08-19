@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3]
+[gd_scene load_steps=19 format=3]
 
 [ext_resource type="Script" path="res://scripts/main/main.gd" id="1_main"]
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="2_player"]
@@ -17,6 +17,7 @@
 [ext_resource type="PackedScene" path="res://scenes/vehicles/finale_pickup.tscn" id="15_pickup"]
 [ext_resource type="Script" path="res://scripts/world/grass_scatterer.gd" id="16_grass"]
 [ext_resource type="Script" path="res://scripts/world/trail_network.gd" id="17_trails"]
+[ext_resource type="Script" path="res://scripts/world/tree_collision_manager.gd" id="18_tree_collision"]
 
 [sub_resource type="Environment" id="Environment_forest"]
 background_mode = 1
@@ -68,6 +69,11 @@ trail_path = NodePath("../TrailNetwork")
 position = Vector3(0, 0.05, 0)
 collision_layer = 1
 collision_mask = 1
+
+[node name="TreeCollisionManager" type="StaticBody3D" parent="."]
+script = ExtResource("18_tree_collision")
+forest_path = NodePath("../ForestBlockout")
+player_path = NodePath("../Player")
 
 [node name="FlashlightPickup" parent="." instance=ExtResource("9_flash_pickup")]
 position = Vector3(2.8, 0.16, 1.5)
