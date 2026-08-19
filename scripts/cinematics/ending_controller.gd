@@ -66,7 +66,9 @@ func _start_ending(player: CharacterBody3D, boundary_point: Vector3, outward: Ve
 		lamp_position.y = roadside.y
 		flashlight_rig.call("place_for_ending", lamp_position, -outward)
 
-	# Hard Silence will stop the AudioDirector here once the audio bus layer is integrated.
+	# Canonical beat: after the vehicle and flashlight placement, all forest audio
+	# stops together. The lit flashlight remains as the only active sensory anchor.
+	AudioDirector.hard_silence()
 	await get_tree().create_timer(1.05).timeout
 
 	var look_back := -outward
