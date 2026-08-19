@@ -1,5 +1,7 @@
 extends Node
 
+const LOCUST_DEATH_CONTROLLER := preload("res://scripts/horror/locust_death_controller.gd")
+
 @export var player_path: NodePath
 @export var terrain_path: NodePath
 @export var forest_path: NodePath
@@ -124,48 +126,36 @@ func _on_final_run_started() -> void:
 		_spawn_locust(true)
 
 func _on_player_caught(locust: Node) -> void:
-	if _death_busy:
+	if _death_busy or not is_instance_valid(locust):
 		return
 	_death_busy = true
-	_player.set_controls_enabled(false)
-	_player.set_look_enabled(false)
 
-	# Temporary playable recovery until the authored front/rear death cinematics are implemented.
-	var overlay := _make_blackout()
-	var black: ColorRect = overlay.get_node("Black")
-	var fade_in := create_tween()
-	fade_in.tween_property(black, "color:a", 1.0, 0.25)
-	await fade_in.finished
-	await get_tree().create_timer(0.35).timeout
+	# Freeze the chase during the authored death shot; keep the caught creature visible.
+	for monster: Node in get_tree().get_nodes_in_group("ff_monster"):
+		if is_instance_valid(monster):
+			monster.set_process(false)
+			monster.set_physics_process(false)
 
-	if SaveSystem.has_run():
-		SaveSystem.load_run()
-	if SaveSystem.has_player_position:
-		_player.teleport_to(SaveSystem.last_player_position)
-	elif _terrain != null and _terrain.has_method("sample_height"):
-		_player.teleport_to(Vector3(0.0, float(_terrain.call("sample_height", 0.0, 0.0)) + 0.06, 0.0))
+	var death_controller := LOCUST_DEATH_CONTROLLER.new()
+	death_controller.name = "LocustDeathController_Runtime"
+	get_parent().add_child(death_controller)
+	await death_controller.call("play_and_recover", _player, locust, _terrain)
 
-	if is_instance_valid(locust):
-		locust.queue_free()
-	_player.set_look_enabled(true)
-	_player.set_controls_enabled(true)
-	var fade_out := create_tween()
-	fade_out.tween_property(black, "color:a", 0.0, 0.35)
-	await fade_out.finished
-	overlay.queue_free()
+	# A restored save starts from a clean encounter state.
+	for monster: Node in get_tree().get_nodes_in_group("ff_monster"):
+		if is_instance_valid(monster):
+			monster.queue_free()
+	_active_encounter = null
+	if is_instance_valid(death_controller):
+		death_controller.queue_free()
+
 	_death_busy = false
-
-func _make_blackout() -> CanvasLayer:
-	var layer := CanvasLayer.new()
-	layer.layer = 120
-	var black := ColorRect.new()
-	black.name = "Black"
-	black.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	black.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	black.color = Color(0.0, 0.0, 0.0, 0.0)
-	layer.add_child(black)
-	get_tree().root.add_child(layer)
-	return layer
+	if GameState.final_run_active:
+		_final_spawned = false
+		call_deferred("_on_final_run_started")
+	else:
+		_cooldown_until = _now() + event_cooldown
+		_schedule_next_check()
 
 func _now() -> float:
 	return Time.get_ticks_msec() / 1000.0
