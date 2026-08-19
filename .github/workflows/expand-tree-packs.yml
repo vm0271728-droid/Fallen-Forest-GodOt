@@ -1,0 +1,57 @@
+name: Expand committed tree packs
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/expand-tree-packs.yml"
+      - "tools/expand_existing_tree_packs.py"
+      - "tools/import_drive_assets.py"
+
+permissions:
+  contents: write
+
+jobs:
+  expand-tree-packs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install RAR extraction support
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y p7zip-full
+
+      - name: Expand committed tree packs
+        run: python tools/expand_existing_tree_packs.py
+
+      - name: Verify tree-only outputs
+        run: |
+          test -f assets/environment/trees/low_poly_pack/source/Tree_Pack.fbx
+          test -f assets/environment/trees/low_poly_pack/source/Tree_Pack.obj
+          test -f assets/environment/trees/dead_firs/variants/fir_1.obj
+          test -f assets/environment/trees/dead_firs/variants/fir_2.obj
+          test -f assets/environment/trees/dead_firs/variants/fir_3.obj
+          test -f assets/environment/trees/dead_firs/variants/fir_4.obj
+          test ! -f 'assets/environment/trees/low_poly_pack/source/LOW POLY FOREST TREE PACK.rar'
+          if find assets/environment/trees/low_poly_pack/textures -maxdepth 1 -type f \
+            \( -iname 'ROCKS_*' -o -iname 'internal_ground*' \) | grep -q .; then
+            echo 'Unused rock/ground payload still present.' >&2
+            exit 1
+          fi
+
+      - name: Commit expanded variants
+        run: |
+          git config user.name "Fallen Forest Tree Pack Expander"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A assets/environment/trees
+          if git diff --cached --quiet; then
+            echo "Tree packs already expanded."
+            exit 0
+          fi
+          git commit -m "Expand canonical tree packs into runtime variants"
+          git push origin HEAD:main
