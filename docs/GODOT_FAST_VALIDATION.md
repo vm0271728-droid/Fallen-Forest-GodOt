@@ -1,7 +1,7 @@
 # Fast Godot script validation
 
 - Engine: Godot 4.7.1 stable
-- Tested commit: `c1490589fc00668b46aa7b34b8372878ffdd2d71`
+- Tested commit: `72d14518421ab113b81d8f3f47e55f53fd122e2e`
 - Exit code: `0`
 - Result: **PASS**
 
