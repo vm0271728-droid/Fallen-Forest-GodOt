@@ -1,0 +1,30 @@
+newmtl nature_bark_fir_07_m_0001.jpg
+Ka 0.2 0.2 0.2
+Kd 0.6 0.6 0.6
+Ks 1 1 1
+Tr 0
+illum 5
+d 1
+Ns 1
+map_Kd nature_bark_fir_07_m_0001.jpg
+map_Bump nature_bark_fir_07_m_0001_b.png
+newmtl nature_bark_fir_05_m_0001.jpg
+Ka 0.2 0.2 0.2
+Kd 0.6 0.6 0.6
+Ks 1 1 1
+Tr 0
+illum 5
+d 1
+Ns 1
+map_Kd nature_bark_fir_05_m_0001.jpg
+map_Bump nature_bark_fir_05_m_0001_b.png
+newmtl nature_bark_fir_02_m_0001.jpg
+Ka 0.2 0.2 0.2
+Kd 0.6 0.6 0.6
+Ks 1 1 1
+Tr 0
+illum 5
+d 1
+Ns 1
+map_Kd nature_bark_fir_02_m_0001.jpg
+map_Bump nature_bark_fir_02_m_0001_b.png
