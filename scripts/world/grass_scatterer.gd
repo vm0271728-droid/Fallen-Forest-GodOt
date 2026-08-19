@@ -6,18 +6,24 @@ const DEFAULT_GRASS_SCENE := preload("res://assets/environment/grass/source/Gras
 @export var world_half_extent := 344.0
 @export var start_clear_radius := 10.0
 @export var document_clear_radius := 1.15
+@export var trail_extra_clearance := 0.38
 @export var terrain_path: NodePath
+@export var trail_path: NodePath
 @export var grass_scene: PackedScene = DEFAULT_GRASS_SCENE
 @export var min_scale := 0.58
 @export var max_scale := 1.05
 
 var _terrain: Node
+var _trails: Node
 var _document_positions: Array[Vector3] = []
 
 func _ready() -> void:
 	_terrain = get_node_or_null(terrain_path)
+	_trails = get_node_or_null(trail_path)
 	if _terrain == null and get_parent() != null:
 		_terrain = get_parent().get_node_or_null("Terrain")
+	if _trails == null and get_parent() != null:
+		_trails = get_parent().get_node_or_null("TrailNetwork")
 	call_deferred("build_grass")
 
 func build_grass() -> void:
@@ -73,6 +79,9 @@ func _build_variant_multimesh(variant: Dictionary, requested_count: int, rng: Ra
 			continue
 		if _near_document(x, z):
 			continue
+		if _trails != null and _trails.has_method("is_in_trail_clearance"):
+			if bool(_trails.call("is_in_trail_clearance", x, z, trail_extra_clearance)):
+				continue
 
 		# Preserve uneven density instead of a uniform green carpet.
 		var cluster := 0.5 + 0.5 * sin(x * 0.028 + sin(z * 0.017) * 2.1 + float(variant_index) * 0.7)
