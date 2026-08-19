@@ -21,10 +21,8 @@ func play_and_recover(player: CharacterBody3D, locust: Node3D, terrain: Node) ->
 	var head := player.get_node("Head") as Node3D
 	var viewmodel := player.get_node_or_null("ViewmodelLayer/ViewmodelContainer/ViewmodelViewport/ViewmodelWorld") as Node3D
 	var arms: Node3D = null
-	var flashlight_visual: Node3D = null
 	if viewmodel != null:
 		arms = viewmodel.get_node_or_null("ArmsRoot") as Node3D
-		flashlight_visual = viewmodel.get_node_or_null("FlashlightVisualRoot/CanonicalFlashlight") as Node3D
 	var flashlight_rig := player.get_node_or_null("Head/Camera3D/FlashlightRig")
 
 	var head_position := head.position
@@ -41,8 +39,8 @@ func play_and_recover(player: CharacterBody3D, locust: Node3D, terrain: Node) ->
 		var drop_position := player.global_position + side + (-player.global_basis.z * 0.28)
 		var drop_direction := (-player.global_basis.z + player.global_basis.x * (0.18 if front_death else -0.22)).normalized()
 		flashlight_rig.call("drop_for_death", drop_position, drop_direction)
-	if flashlight_visual != null:
-		flashlight_visual.visible = false
+	if viewmodel != null and viewmodel.has_method("hide_flashlight_for_death"):
+		viewmodel.call("hide_flashlight_for_death")
 
 	if front_death:
 		await _play_front(player, head, arms, locust)
@@ -69,8 +67,8 @@ func play_and_recover(player: CharacterBody3D, locust: Node3D, terrain: Node) ->
 		arms.rotation = arms_rotation
 	if flashlight_rig != null and flashlight_rig.has_method("restore_after_death"):
 		flashlight_rig.call("restore_after_death")
-	if flashlight_visual != null and flashlight_rig != null:
-		flashlight_visual.visible = bool(flashlight_rig.get("acquired"))
+	if viewmodel != null and viewmodel.has_method("restore_flashlight_after_death"):
+		viewmodel.call("restore_flashlight_after_death")
 
 	player.set_look_enabled(true)
 	player.set_controls_enabled(true)
