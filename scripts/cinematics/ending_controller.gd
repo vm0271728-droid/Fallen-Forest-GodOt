@@ -3,8 +3,10 @@ extends Node3D
 @export var boundary_path: NodePath
 @export var terrain_path: NodePath
 @export var player_path: NodePath
+@export var pickup_scene: PackedScene
 @export var escape_run_time := 2.35
 @export var road_approach_time := 0.55
+@export var vehicle_moment_time := 5.8
 @export var end_fade_time := 2.45
 
 var _boundary: Node
@@ -29,6 +31,7 @@ func _on_forest_exited(player: CharacterBody3D, boundary_point: Vector3, outward
 	_start_ending(player, boundary_point, outward.normalized())
 
 func _start_ending(player: CharacterBody3D, boundary_point: Vector3, outward: Vector3) -> void:
+	# Safety rule: the chase is over before player control is removed.
 	for monster in get_tree().get_nodes_in_group("ff_monster"):
 		if is_instance_valid(monster):
 			monster.queue_free()
@@ -55,7 +58,16 @@ func _start_ending(player: CharacterBody3D, boundary_point: Vector3, outward: Ve
 
 	await _move_actor(player, forest_exit, escape_run_time, outward)
 	await _move_actor(player, roadside, road_approach_time, outward)
-	await get_tree().create_timer(0.8).timeout
+	await _play_pickup(roadside, tangent)
+
+	var flashlight_rig := player.get_node_or_null("Head/Camera3D/FlashlightRig")
+	if flashlight_rig != null and flashlight_rig.has_method("place_for_ending"):
+		var lamp_position := roadside + tangent * 0.38 - outward * 0.18
+		lamp_position.y = roadside.y
+		flashlight_rig.call("place_for_ending", lamp_position, -outward)
+
+	# Hard Silence will stop the AudioDirector here once the audio bus layer is integrated.
+	await get_tree().create_timer(1.05).timeout
 
 	var look_back := -outward
 	var target_yaw := atan2(-look_back.x, -look_back.z)
@@ -71,7 +83,27 @@ func _start_ending(player: CharacterBody3D, boundary_point: Vector3, outward: Ve
 	_message.modulate.a = 1.0
 	_message.add_theme_font_size_override("font_size", 56)
 
-	# Menu scene will replace this hold once the full main menu flow is integrated.
+	# Main-menu scene transition replaces this hold once the full menu flow is integrated.
+
+func _play_pickup(roadside: Vector3, tangent: Vector3) -> void:
+	if pickup_scene == null:
+		await get_tree().create_timer(1.65).timeout
+		return
+	var vehicle := pickup_scene.instantiate()
+	add_child(vehicle)
+	var start := roadside - tangent * 31.0
+	var finish := roadside + tangent * 31.0
+	start.y = roadside.y + 0.04
+	finish.y = roadside.y + 0.04
+	vehicle.global_position = start
+	vehicle.rotation.y = atan2(tangent.x, tangent.z)
+	if vehicle.has_method("start_drive"):
+		vehicle.call("start_drive", [finish])
+	await get_tree().create_timer(vehicle_moment_time).timeout
+	if is_instance_valid(vehicle):
+		if vehicle.has_method("stop_now"):
+			vehicle.call("stop_now", false)
+		vehicle.queue_free()
 
 func _move_actor(actor: Node3D, target: Vector3, duration: float, face: Vector3) -> void:
 	if face.length_squared() > 0.001:
@@ -86,17 +118,26 @@ func _ground(position: Vector3) -> Vector3:
 	return position
 
 func _build_road(centre: Vector3, tangent: Vector3) -> void:
-	var road := MeshInstance3D.new()
+	var road := StaticBody3D.new()
 	road.name = "FinalRoad_Runtime"
+	road.global_position = centre - Vector3.UP * 0.08
+	road.rotation.y = atan2(-tangent.x, -tangent.z)
+
+	var mesh_instance := MeshInstance3D.new()
 	var mesh := BoxMesh.new()
 	mesh.size = Vector3(8.8, 0.16, 72.0)
 	var material := StandardMaterial3D.new()
 	material.albedo_color = Color(0.045, 0.042, 0.037, 1.0)
 	material.roughness = 0.96
 	mesh.material = material
-	road.mesh = mesh
-	road.global_position = centre - Vector3.UP * 0.08
-	road.rotation.y = atan2(-tangent.x, -tangent.z)
+	mesh_instance.mesh = mesh
+	road.add_child(mesh_instance)
+
+	var collision := CollisionShape3D.new()
+	var shape := BoxShape3D.new()
+	shape.size = Vector3(8.8, 0.16, 72.0)
+	collision.shape = shape
+	road.add_child(collision)
 	add_child(road)
 
 func _build_overlay() -> void:
