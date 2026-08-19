@@ -1,50 +1,684 @@
-# Fallen Forest — Master Technical Specification
+# Fallen Forest — полное каноническое ТЗ
 
-## Project migration
+> Источник истины для переноса проекта из Unity/C# в Godot 4 + GDScript. Переносим поведение, механику, тайминги, атмосферу, AI и постановку, а не синтаксис Unity-кода.
 
-Migration from Unity/C# to Godot 4/GDScript.
+## 0. Приоритет правил
 
-## Core gameplay systems
+При конфликте требований приоритет такой:
+1. последние зафиксированные правила проекта;
+2. FPS/monster animation requirements;
+3. более новые feature-реализации Unity;
+4. master plan;
+5. старое поведение Unity `main`.
 
-- First person horror controller
-- Exploration loop
-- Forest environment
-- Flashlight system
-- Interactive documents
-- Vehicle/environment props
-- Monster encounters
-- Screamer events
-- Audio atmosphere
-- Mobile optimization
+Старое поведение, противоречащее этому документу, не переносится как канон.
 
-## Environment
+## 1. Идентичность игры
 
-Main environment assets:
+- Название: **Fallen Forest**.
+- Жанр: атмосферный survival / psychological horror от первого лица.
+- Основная платформа: **Android**, landscape.
+- Управление: mobile-first touch.
+- Целевая длительность полного прохождения: ориентировочно 45–70 минут.
+- Оружия нет. Базовые инструменты игрока: движение, наблюдение, фонарь, дистанция и поиск.
 
-- Trees packs
-- Grass
-- Forest vegetation
-- Terrain dressing
-- Fog and horror lighting
+Игрок просыпается ночью в огромном тёмном хвойном лесу, подбирает фонарь, ищет 10 документов, переживает встречи с Locust и потенциально одну встречу с Boiled One, после 10-го документа спасается в финальной погоне и выходит к старой дороге.
 
-## Characters
+## 2. Основной игровой цикл
 
-Imported assets:
+```text
+Запуск → Warning → Main Menu → New Game / Continue → Loading
+→ Wake Up → Flashlight Pickup → Exploration
+→ Documents 1–9 + Horror Events
+→ Document 10 → Final Run
+→ Multiple Locust Chase → Any Forest Boundary
+→ Old Road → Pickup Finale → Hard Silence
+→ Look Back At Forest → Ending → Main Menu
+```
 
-- Locust creature
-- Boiled One creature
-- FPS arms
+## 3. Забег и сохранение
 
-## Import rule
+Каждая новая игра получает собственный `run_seed`. Seed должен обеспечивать воспроизводимость процедурных элементов забега.
 
-Original Drive assets are the source of truth. Convert only when required for Godot compatibility or optimization.
+Сохраняются минимум:
+- run seed;
+- количество документов;
+- битовая/логическая маска конкретных собранных документов;
+- последняя сохранённая позиция игрока;
+- факт расходования Boiled encounter;
+- факт пережитого Boiled influence;
+- состояние финального забега, если это понадобится для безопасного восстановления.
 
-## Development order
+Autosave выполняется после каждого документа. `Continue` восстанавливает тот же seed и тот же забег. `New Game` полностью сбрасывает состояние старого забега.
 
-1. Godot project foundation
-2. Asset import pipeline
-3. Player controller
-4. Interaction system
-5. Environment blockout
-6. Horror events
-7. Optimization
+## 4. Документы
+
+В каждом забеге существует **ровно 10 обязательных документов**. Все десять всегда должны быть реально размещены и доступны.
+
+Документы распределяются по лесу и не должны специально лежать в центрах троп. Допустимы густая трава, маленькие поляны, зоны у деревьев, камней, поваленных объектов и неровной местности.
+
+При генерации проверять:
+- границы карты;
+- дистанцию от старта;
+- дистанцию между документами;
+- крутизну поверхности;
+- пересечения с деревьями и физическими объектами;
+- достижимость игроком.
+
+Unity baseline для tuning:
+- minimum spacing ≈ 28 м;
+- minimum from start ≈ 34 м;
+- max slope ≈ 24°.
+
+Это стартовые значения, а не нерушимые константы.
+
+## 5. Светлячки документов
+
+Каждый из 10 уже созданных документов независимо получает **45% шанс** атмосферных светлячков. Это не шанс появления документа.
+
+При успехе:
+- 4–6 светлячков;
+- очень маленькие и тусклые;
+- медленное нерегулярное движение;
+- короткая дальность видимости (baseline ≈ 12.5 м);
+- не превращать их в quest beacon;
+- по умолчанию предпочтительно emissive без множества real-time lights.
+
+## 6. Очистка травы около документа
+
+Если документ попал в высокую траву, формируется мягкая нерегулярная зона разрежения: густо → реже → документ. Никаких квадратных дырок.
+
+## 7. Подбор документа
+
+Подбор автоматический, отдельной Interaction-кнопки нет. Целевая длительность ≈ 2.0–2.7 с.
+
+Последовательность:
+1. фонарь правой руки немного уходит вниз/вправо, продолжая освещать объект;
+2. левая рука тянется к реальной позиции документа;
+3. пальцы цепляются за край;
+4. сначала поднимается одна сторона папки;
+5. хват корректируется;
+6. папка полностью отрывается от земли;
+7. кисть реагирует на вес;
+8. объект ненадолго приближается к камере;
+9. левая рука уводит его вниз;
+10. объект исчезает;
+11. HUD показывает `DOCUMENTS X / 10` / `ДОКУМЕНТЫ X / 10`;
+12. autosave;
+13. фонарь возвращается в базовую позу.
+
+Минимум три варианта хвата: край; подхват снизу с перехватом; редкая небольшая коррекция неидеального хвата. На неровной поверхности используется кратковременный IK/процедурная коррекция reach.
+
+## 8. Игрок
+
+- Character height ориентировочно 1.76 м.
+- Основной режим — ходьба.
+- Baseline walk speed: 3.25 м/с.
+- Acceleration ≈ 18.
+- Deceleration ≈ 22.
+- Gravity baseline ≈ -22 м/с².
+- Финальный забег: скорость игрока ×2.15.
+
+Движение должно иметь массу и плавное ускорение/торможение.
+
+## 9. Mobile input
+
+Левая половина экрана:
+- floating joystick появляется в точке касания;
+- задаёт направление;
+- исчезает после отпускания.
+
+Правая половина:
+- невидимая look-zone;
+- drag управляет yaw/pitch.
+
+Правая половина не должна случайно активировать движение, левая — вращение камеры.
+
+## 10. Камера
+
+- Normal gameplay FOV: **75° fixed**.
+- Старый FOV slider удаляется.
+- Pitch limit ориентировочно ±82°.
+- Временное изменение FOV допустимо только для постановочных сцен.
+
+## 11. FPS viewmodel
+
+Руки/фонарь рендерятся отдельной viewmodel-логикой. Целевой viewmodel FOV ≈ 60–62°.
+
+Проверка минимум на 16:9, 18:9 и 20:9. Игрок не должен увидеть обрезанные руки, пустоту вместо тела или техническую границу FPS-модели.
+
+## 12. Архитектура FPS-анимаций
+
+```text
+Base skeletal animation
++ additive breathing/tension
++ camera-turn procedural lag
++ walk/run sway
++ short interaction IK
++ death override
+```
+
+Принципы: масса, инерция, асимметрия, человеческая пластика, плавные переходы, участие пальцев. Левая рука преимущественно взаимодействует с документами, правая держит фонарь.
+
+## 13. Фонарь
+
+Фонарь — тяжёлый бытовой предмет, не оружие. Используются PBR-каналы исходного ассета: color/albedo, normal, AO, metallic, smoothness/roughness, emissive.
+
+Луч следует физическому направлению фонаря, а не жёстко `Camera.forward`.
+
+## 14. Инерция фонаря
+
+При резком повороте камеры рука и фонарь слегка отстают, затем догоняют с небольшим overshoot и damping. Horizontal lag сильнее vertical. Нельзя превращать руку в желе или делать управление светом неудобным.
+
+Состояния: idle — минимум; walk — немного живее; run — сильнее; panic turn — заметно, но контролируемо.
+
+## 15. Flashlight idle variants
+
+`Flashlight_Idle_Base`: 4–6 с seamless loop, дыхание, микродвижение предплечья/кисти, небольшое смещение луча, микрокоррекция пальцев.
+
+`Variant_A`: ≈1.5–2 с, слегка опустить фонарь, ослабить хват, по-разному переставить пальцы, вернуть.
+
+`Variant_B`: ≈2–3 с, более глубокое дыхание, нервная коррекция кисти и усиление хвата.
+
+`Variant_C`: редкая микроанимация большого пальца/переключателя без выключения света.
+
+Варианты запускаются нерегулярно.
+
+## 16. Ходьба/бег с фонарём
+
+Walk: footsteps + breathing + lag + масса + небольшая асимметрия. Не использовать очевидный одинаковый sine weapon-bob.
+
+Run: фонарь ниже и ближе к телу, локоть активнее, луч менее стабилен, левая рука иногда естественно попадает в нижний кадр, после остановки есть короткий settling.
+
+## 17. Подбор фонаря
+
+Автоматический, без interaction button. Цель ≈2.3–2.8 с.
+
+1. рука входит в кадр;
+2. тянется к реальному объекту;
+3. первое касание слегка сдвигает фонарь;
+4. пальцы обхватывают геометрию;
+5. фонарь отрывается с ощущением массы;
+6. кисть немного проседает;
+7. левая рука кратко помогает исправить хват;
+8. правая разворачивает фонарь;
+9. большой палец физически нажимает кнопку;
+10. click;
+11. микрозадержка;
+12. включается свет;
+13. transition в idle.
+
+Нельзя телепортировать фонарь в руку.
+
+## 18. Пробуждение
+
+Чёрный экран → лес/дыхание → неполные открытия век → blur/focus recovery → камера низко → физический подъём → обнаружение фонаря. Unity baseline полной сцены ≈5.2 с. Без длинной экспозиции и рассказчика.
+
+## 19. Размер мира
+
+Основная игровая зона: **≈720×720 м**. Она не должна ощущаться квадратной ареной.
+
+## 20. Рельеф
+
+Лес не плоский. Нужны широкие холмы, средние неровности, низины, неглубокие овраги, естественные впадины, мелкий surface noise и гребни. Стартовая зона более ровная, затем мягко смешивается с обычным рельефом.
+
+## 21. Pipeline генерации мира
+
+```text
+Terrain relief
+→ terrain-following trails
+→ trees + dense grass
+→ documents
+→ runtime encounters
+```
+
+Порядок обязателен: последующие системы должны видеть готовую геометрию предыдущих.
+
+## 22. Лес
+
+Густой тёмный хвойный лес. Основной массив — spruce/pine; допускаются редкие берёзы, сухие деревья, пни, мёртвые стволы, поваленные деревья.
+
+Ориентир: ель ≈60–75% древесного массива. Unity baseline имел около 3250 деревьев; в Godot число определяется профилированием и MultiMesh/LOD, а не количеством Node3D.
+
+Размещение кластерное и нерегулярное, с разной плотностью, небольшим scale/lean variation и открытой стартовой зоной.
+
+## 23. Пространственная структура
+
+Нужны очень густые участки, более редкие зоны, узкие sightlines, редкие поляны, естественные просветы и места, где легко потерять ориентацию.
+
+## 24. Landmarks
+
+Крупные различимые формы для навигации и разнообразия: овраг, влажная область, поляна, охотничья вышка, большое поваленное дерево, скальная формация, палатка/лагерь, старая дорога, сверхгустой участок, пересохший ручей.
+
+## 25. Тропы
+
+Узкая сеть грязевых троп, следующая рельефу. Тропы изгибаются, местами ветвятся и теряются. Они не ведут напрямую ко всем документам.
+
+Одна и та же trail geometry/zone используется для исключения деревьев, уменьшения травы и запрета документов на центре пути.
+
+## 26. Трава
+
+Цель Unity-ветки ≈16000 clumps, но в Godot это MultiMesh/instancing, а не 16000 Nodes.
+
+На тропе плотность плавно снижается почти до нуля, к краям возвращается и становится высокой в лесу.
+
+## 27. Реакция травы и ветер
+
+Трава имеет дешёвую shader-анимацию ветра и отгибается возле игрока. Ветер использует несколько частот и случайные gusts. Сила аудиоветера и визуального shader wind должны быть связаны.
+
+## 28. Ночь, свет и туман
+
+Ambient почти чёрный с холодным оттенком. Никакого яркого синего «дня ночью». Очень слабый moon/directional contribution нужен только для силуэтов и глубины. Фонарь — основной источник видимости.
+
+Тёмный fog скрывает границы и дальние sightlines; его плотность настраивается совместно с дальностью фонаря.
+
+## 29. Ground dressing
+
+Поверхность: хвоя, грязь, мох, веточки, мокрые зоны, камни, корни, дорожки. Распределяются камни, пни, ветки и поваленные брёвна; часть влияет на физическую навигацию.
+
+## 30. Атмосферный звук
+
+Постоянные слои: forest ambience + wind + low horror/tension drone. Drone усиливается нелинейно по мере сбора документов (ориентир `tension²`).
+
+Случайные лесные events baseline: интервал ≈22–68 с, расстояние ≈11–34 м вокруг игрока. Они не должны однозначно означать монстра.
+
+Footsteps различаются минимум для лесной поверхности и тропы, с небольшим random pitch/volume и избеганием немедленного повтора.
+
+## 31. Boiled One — роль и тело
+
+Boiled — редкое психологическое событие, не обычный убийца. Высота ориентировочно 1.5× игрока. Он не гуманоид: нет нормальной человеческой пластики плеч/ног/idle/walk.
+
+Обычная телесная анимация — минимальный нерегулярный `Boiled_IdleSway`.
+
+## 32. Boiled spawn
+
+- примерно в 5 раз реже Locust;
+- ориентировочно между документами 2–8;
+- выбирает открытую точку;
+- не материализуется прямо перед глазами;
+- один полноценный spawn opportunity на забег;
+- если появился и не был обнаружен, encounter всё равно считается потраченным; lifetime baseline ≈28–42 с.
+
+## 33. Boiled gaze detection
+
+Фонарь сам по себе не запускает событие. Требуется реальный взгляд:
+- target в viewport;
+- допустимая дистанция;
+- малый gaze angle;
+- прямой LOS;
+- короткое подтверждение ≈0.06 с.
+
+Листья, густая хвоя, ветки, стволы, камни и другие blockers должны реально блокировать gaze. Для тяжёлой foliage geometry допускаются дешёвые vision-occlusion volumes.
+
+## 34. Boiled Focus Event — окончательная версия
+
+После подтверждённого взгляда камера плавно фокусируется, manual look временно перехватывается, но игрок **не обездвиживается полностью**: скорость движения уменьшается на 67%, остаётся 33% обычной скорости.
+
+Одновременно:
+- breathing ускоряется;
+- слабый tinnitus;
+- forest ambience немного приглушается;
+- веки начинают закрываться.
+
+**Boiled исчезает только в момент полностью закрытых глаз. Игрок не должен видеть despawn.**
+
+После закрытия глаз допускается blackout/screamer/video/короткое повторное пробуждение. Игрок возвращается в ту же точку леса.
+
+## 35. Boiled post-effect
+
+После реально пережитой встречи текущий забег получает persistent visual corruption. Baseline: burst interval ≈4.2–11.5 с, duration ≈0.055–0.18 с, иногда microburst, несколько тонких grayscale/cyan/red strips. Не превращать в постоянный VHS-фильтр. Флаг сбрасывается только новой игрой.
+
+## 36. Locust — роль и масштаб
+
+Locust — основной физический преследователь. Рост ориентировочно 2.3× игрока. Очень длинные руки. Нельзя анимировать как просто увеличенного человека.
+
+## 37. Locust spawn/director
+
+Обычная встреча baseline ≈18–42 м. Locust использует реальные деревья как укрытия через spatial query/index.
+
+Director baseline:
+- event chance ≈0.34;
+- проверка ≈10–19 с;
+- cooldown ≈14 с;
+- chance постепенно уменьшается по мере документов;
+- Boiled relative probability ≈0.20 относительно Locust.
+
+## 38. Locust hiding animations
+
+Минимум 5 реально разных clips:
+- `FarHide_A`;
+- `FarHide_B`;
+- `MediumHide`;
+- `CloseHide_A`;
+- `CloseHide_B`.
+
+Должны отличаться силуэтом, таймингом, видимыми частями тела и траекторией retreat, а не только speed multiplier.
+
+## 39. Distance logic во время hiding
+
+AI продолжает пересчитывать дистанцию во время анимации. Если игрок отходит, Locust может завершить retreat. Если игрок резко сокращает дистанцию, retreat прерывается и включается Rage.
+
+Безопасное отступление для близкой встречи ориентировочно достигается при увеличении дистанции примерно до `0.85 × medium_threshold`.
+
+## 40. Rage
+
+Rage включается при вторжении игрока в пространство отходящего Locust. Hide abort → масса вперёд → руки готовятся к опоре → target lock → chase. После Rage нельзя мгновенно возвращаться в passive hide.
+
+## 41. Locust locomotion
+
+Ключевой визуальный принцип: длинные руки используются как дополнительные опоры при быстром беге. Это гибрид тяжёлого бега и почти quadrupedal support.
+
+Нужны authored contacts + краткий IK, тяжёлые удары рук о землю, синхронный звук и небольшой camera reaction при очень близком ударе. Никакого sliding и обычного humanoid sprint.
+
+## 42. Locust danger tuning
+
+Старые стартовые Unity значения: warning ≈14 м, instant attack ≈8.5 м. Они являются tuning baseline и подлежат тестированию.
+
+## 43. Фонарь при смерти
+
+В обеих Locust death sequences фонарь физически выпадает: отсоединяется, получает короткую rigid-body physics, падает/отскакивает/вращается, остаётся включённым и продолжает освещать сцену.
+
+## 44. Rear Locust death
+
+Отдельная постановка: пронзание сзади → camera impact → фонарь падает → обе руки хватают конечность → дрожь/попытка удержаться → сначала соскальзывает одна рука, затем вторая → красная пульсирующая виньетка → дыхание ломается → black → Death UI.
+
+## 45. Front Locust death
+
+Отдельная сцена: front impalement → сильный impact → фонарь падает → контролируемое падение/roll камеры → руки панически пытаются защищаться/толкать → постепенно слабеют и выпадают из кадра → пауза → огромная голова Locust быстро входит в камеру → screamer/tinnitus → ambience почти исчезает → красный pulse/blur → black → Death UI.
+
+Два одобренных скримера должны соответствовать двум реально различным death sequences. `amazing-grace-analog-horror.mp3` запрещён для релиза.
+
+## 46. Death Menu
+
+После полного black:
+- Continue;
+- Main Menu.
+
+Continue восстанавливает последний autosave, тот же seed, оставшиеся документы и persistent Boiled effect.
+
+## 47. Final Run
+
+После документа 10 запускается `FinalRunStarted`; обычные random encounters прекращаются.
+
+- player speed ×2.15;
+- final Locust speed ≈97.5% текущей max speed игрока;
+- стартовый pressure baseline — до 3 Locust примерно в кольце 24–48 м.
+
+Игрок способен оторваться при хорошем движении.
+
+## 48. Forest boundary и старт ending
+
+До 10 документов граница физически удерживает игрока. После Final Run касание **любой стороны** границы может запустить финал. После фактического старта ending все оставшиеся Locust удаляются, чтобы катсцена не могла закончиться нечестной смертью.
+
+## 49. Старая дорога
+
+Игрок выбегает из леса на реальную старую дорогу. Она должна выглядеть частью мира, а не внезапно созданным серым кубом.
+
+## 50. Финальный pickup
+
+Используется пользовательская модель pickup truck. Цель — физически читаемый автомобиль, а не transform tween.
+
+Нужны эквиваленты:
+- rigid-body chassis;
+- 4 физические точки/колеса;
+- suspension spring/damper/travel;
+- anti-roll;
+- motor/brake;
+- steering;
+- визуальное вращение колёс;
+- headlights/tail lights и emissive материалы.
+
+Если исходный FBX содержит merged wheels, они должны быть выделены в управляемые визуальные transforms или подготовлены через DCC-конвертацию.
+
+## 51. Финальный фонарь и Hard Silence
+
+После vehicle beat приобретённый фонарь снимается с игрока, остаётся включённым на земле и направлен обратно в лес.
+
+Затем вызывается **Hard Silence**: останавливаются forest ambience, wind, horror drone и случайные events; визуальный ветер может тоже резко успокоиться.
+
+## 52. Последняя постановка
+
+Игрок поворачивается обратно к лесу, видит тёмный массив и оставленный включённый фонарь, садится/опускается, изображение медленно затемняется, появляется локализованный финальный текст (`THE END` / `КОНЕЦ`), затем возврат в меню.
+
+## 53. HUD
+
+Минималистичный. Основное gameplay message: `DOCUMENTS X / 10` / `ДОКУМЕНТЫ X / 10`. Сообщения плавно появляются и исчезают. Постоянного clutter нет.
+
+## 54. Main Menu
+
+Play, Settings, Exit, Credits. На фоне тёмный лес с очень слабым motion/drift, а не статичный JPEG.
+
+## 55. Warning
+
+Один раз за каждый запуск приложения показывается предупреждение о скримерах, резких звуках, тревожных сценах, flashing effects и фоточувствительной эпилепсии, плюс рекомендация использовать наушники для погружения.
+
+## 56. Loading Screen
+
+Тёмный лес, `FALLEN FOREST`, локализованное Loading/Загрузка, тонкая progress line в самом низу экрана. Progress должен отражать реальную загрузку; fake percentage не нужен.
+
+## 57. Settings
+
+Минимум:
+- Sensitivity: baseline 0.3×–2.5×, default 1.0×;
+- Camera Shake: 0–100%, default ≈70%;
+- Language: English / Русский;
+- FOV slider отсутствует, world FOV = 75°.
+
+## 58. Localization
+
+Default: English. Первые языки: English и Русский. Выбор сохраняется.
+
+Локализуется всё player-facing: warning, menu, settings, loading, HUD, document UI, death UI, finale, credits. Архитектура data-driven и расширяемая.
+
+## 59. Авторство и Credits
+
+В меню небольшой credit block:
+- `Idea by: Meric23` / `Идея: Meric23`;
+- `Developed by: Meric23` / `Реализовал: Meric23`.
+
+Отдельный Credits screen хранит точную attribution сторонних моделей, текстур, музыки, SFX и видео. Проект рассматривается как free non-commercial fan game, пока права/лицензии не подтверждены для публичного распространения.
+
+## 60. Производительность
+
+Главная цель: **60 FPS на Android** без превращения леса в пустой corridor.
+
+Использовать:
+- MultiMesh/instancing;
+- LOD/HLOD;
+- visibility/frustum culling;
+- разумный shadow distance;
+- дешёвую shader vegetation animation;
+- краткий IK только во время взаимодействий;
+- physics только на коротких постановочных эпизодах;
+- никаких тысяч отдельных grass nodes с per-frame logic.
+
+Unity adaptive-quality baseline: high shadow distance ≈58 м / LOD bias ≈1.35; low ≈36 м / ≈0.92; downgrade при устойчивых <43 FPS, возврат при >54 FPS. В Godot принцип сохраняется, конкретные параметры профилируются.
+
+## 61. Mobile animation constraints
+
+Качество пластики не заменять дешёвыми клипами. Экономия достигается skeletal clips, lightweight procedural offsets, кратким IK, дешёвыми vision blockers и short-duration physics. Монстрам не нужен постоянный full-body ragdoll simulation.
+
+## 62. Source assets
+
+**Канонический источник моделей и пользовательских ассетов — Google Drive владельца проекта.** Не заменять их случайными моделями из интернета без отдельного решения владельца.
+
+Текущий Drive pack содержит минимум:
+- Locust FBX + PBR textures;
+- Boiled One FBX + textures;
+- FPS arms FBX + textures;
+- flashlight FBX + PBR maps;
+- document folder GLB + textures;
+- pickup truck FBX + texture;
+- grass FBX + texture sets;
+- Boiled screamer video;
+- approved Locust screamer audio;
+- multiple tree packs, включая Black Spruce LOD assets и dead firs.
+
+Исходные файлы сохраняются без destructive editing. Конвертация в GLB допускается только для совместимости, рига, оптимизации или удобства импорта в Godot.
+
+## 63. Лицензии и provenance
+
+Для каждого финального ассета до публичного релиза фиксируется фактический файл, его источник, автор, лицензия и attribution requirements. Права на mesh и права на персонажа/IP рассматриваются отдельно. Нельзя выбирать «удобную» лицензию из противоречащих старых заметок.
+
+## 64. Запрет placeholder monsters
+
+Финальный релиз нельзя выдавать за готовый, если вместо канонических Locust/Boiled используются generic placeholder creatures. Placeholder допустим только для внутренней разработки.
+
+## 65. Будущий LAN multiplayer
+
+Не входит в первый Godot-релиз, но архитектура не должна намеренно блокировать его.
+
+Будущее направление:
+- 2–4 игрока;
+- local Wi-Fi/LAN;
+- host-authoritative run state;
+- shared 10/10 documents;
+- LAN discovery + private IPv4;
+- без Internet matchmaking, relay, cloud accounts и dedicated server.
+
+Solo saves не должны повреждаться LAN-сессией.
+
+## 66. Godot architecture
+
+```text
+Core
+  RunState
+  SaveSystem
+  Settings
+  Localization
+  SceneFlow
+Player
+  CharacterBody3D
+  TouchInput
+  CameraRig
+  Viewmodel
+  Flashlight
+  Foley
+World
+  Terrain/relief
+  Trails
+  Forest generation
+  Vegetation/MultiMesh
+  Wind/Fog
+  Spatial queries
+Documents
+  Spawner
+  Pickup
+  IK interaction
+  Fireflies
+  Grass exclusion
+Horror
+  EventDirector
+  Locust
+  Boiled
+  FinalChase
+Cinematics
+  WakeUp
+  BoiledEvent
+  DeathFront
+  DeathRear
+  Ending
+Audio
+UI
+FinaleVehicle
+```
+
+Связь систем: signals, explicit references, небольшое число Autoload services. Не создавать один гигантский GameManager, управляющий всем.
+
+## 67. Что нельзя механически переносить из Unity
+
+- FOV slider → fixed 75°;
+- мгновенный pickup фонаря → полноценная FPS pickup animation;
+- мгновенное исчезновение документа → hand/IK pickup;
+- Boiled trigger от одного фонаря → camera gaze + LOS;
+- humanoid Boiled → vertical non-human sway;
+- полная остановка игрока при Boiled → оставить 33% movement;
+- старые procedural Locust lunges → отдельные front/rear deaths;
+- humanoid Locust sprint → arm-supported locomotion;
+- transform-only finale vehicle → physical vehicle presentation;
+- возможность недоспавнить документы → всегда 10.
+
+## 68. Acceptance criteria
+
+### Player
+- touch move/look;
+- fixed 75° world FOV;
+- viewmodel не раскрывает технические края;
+- flashlight lag/inertia;
+- beam следует фонарю.
+
+### Flashlight
+- физически убедительный pickup;
+- click + небольшая light delay;
+- base idle + минимум два meaningful variants;
+- walk/run presentation.
+
+### Documents
+- всегда 10;
+- корректное распределение и reachability;
+- не по центрам троп;
+- pickup левой рукой, 3 grip variants и terrain correction;
+- autosave;
+- 45% dim fireflies;
+- grass clearance.
+
+### World
+- ≈720×720 м;
+- неровный рельеф;
+- густой лес;
+- тропы;
+- dense instanced grass;
+- wind/player reaction;
+- landmarks;
+- fog;
+- визуально скрытые границы.
+
+### Boiled
+- ≈1.5× игрока, non-humanoid;
+- gaze + LOS + foliage occlusion;
+- 33% movement остаётся;
+- breathing/tinnitus;
+- despawn только при полностью закрытых глазах;
+- persistent corruption after-effect.
+
+### Locust
+- ≈2.3× игрока;
+- 5 hiding animations;
+- continuous distance logic;
+- retreat/rage;
+- arm-supported chase;
+- distinct front/rear death sequences;
+- физически падающий включённый фонарь;
+- player hands + red pulse + black before Death UI.
+
+### Finale
+- trigger after 10/10;
+- player ×2.15;
+- Locust ≈97.5% player max speed;
+- любой край карты может завершить chase;
+- монстры удаляются после старта ending;
+- old road + physical pickup + lights;
+- фонарь остаётся включённым;
+- Hard Silence;
+- look back + localized ending.
+
+### Technical
+- стабильный Android export;
+- канонические assets;
+- no placeholder monsters in final;
+- лицензии/provenance подтверждены;
+- target 60 FPS;
+- реальное device testing;
+- aspect ratio testing;
+- save/continue/new run testing.
+
+## 69. Главный принцип миграции
+
+Unity-репозиторий остаётся архивом и reference implementation. Godot-проект должен повторить ощущение, механику, тайминги, AI, визуальную постановку и правила игры, но не обязан повторять MonoBehaviour-архитектуру, PlayerPrefs, Animator Controller, WheelCollider, Unity Terrain API, URP/HLSL или Unity scene hierarchy.
+
+```text
+Unity implementation
+→ извлечь поведение
+→ Fallen Forest canon
+→ реализовать нативно средствами Godot + GDScript
+```
