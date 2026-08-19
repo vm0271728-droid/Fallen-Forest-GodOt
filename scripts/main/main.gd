@@ -1,14 +1,20 @@
 extends Node3D
 
+const WAKE_UP_SEQUENCE := preload("res://scripts/cinematics/wake_up_sequence.gd")
+
 @onready var terrain: Node = $Terrain
 @onready var player: CharacterBody3D = $Player
 @onready var flashlight_pickup: Node3D = $FlashlightPickup
 
+var _fresh_run := false
+
 func _enter_tree() -> void:
 	# World/document children need a valid deterministic seed before their _ready() methods run.
 	if SaveSystem.has_run():
+		_fresh_run = false
 		SaveSystem.load_run()
 	else:
+		_fresh_run = true
 		SaveSystem.begin_new_run()
 
 func _ready() -> void:
@@ -27,6 +33,17 @@ func _ready() -> void:
 
 	if not GameState.final_run_started.is_connected(_on_final_run_started):
 		GameState.final_run_started.connect(_on_final_run_started)
+
+	if _fresh_run:
+		call_deferred("_play_fresh_run_wake_up")
+
+func _play_fresh_run_wake_up() -> void:
+	var wake := WAKE_UP_SEQUENCE.new()
+	wake.name = "WakeUpSequence_Runtime"
+	add_child(wake)
+	await wake.call("play", player)
+	if is_instance_valid(wake):
+		wake.queue_free()
 
 func _on_final_run_started() -> void:
 	print("Fallen Forest: final run started (10/10 documents).")
