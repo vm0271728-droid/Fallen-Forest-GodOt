@@ -13,7 +13,7 @@ func _ready() -> void:
 	settings_button.pressed.connect(_show_settings)
 	credits_button.pressed.connect(_show_credits)
 	quit_button.pressed.connect(SceneFlow.quit_game)
-	continue_button.disabled = not SaveSystem.has_run()
+	continue_button.disabled = not SaveSystem.has_valid_run()
 	_apply_language()
 	if not Engine.has_meta("fallen_forest_warning_shown"):
 		Engine.set_meta("fallen_forest_warning_shown", true)
