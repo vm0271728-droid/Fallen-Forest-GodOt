@@ -47,6 +47,7 @@ func save_run() -> void:
 		push_error("Fallen Forest: unable to open save file for writing.")
 		return
 	file.store_string(JSON.stringify(payload))
+	file.flush()
 	file.close()
 
 func load_run() -> Dictionary:
@@ -54,24 +55,42 @@ func load_run() -> Dictionary:
 		return {}
 	var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
 	if file == null:
+		push_warning("Fallen Forest: save file exists but cannot be opened.")
 		return {}
-	var parsed = JSON.parse_string(file.get_as_text())
+	var text := file.get_as_text()
 	file.close()
+	var parsed = JSON.parse_string(text)
 	if typeof(parsed) != TYPE_DICTIONARY:
-		push_warning("Fallen Forest: save file is invalid; starting fresh is recommended.")
+		push_warning("Fallen Forest: save file is invalid and will be replaced by a new run.")
 		return {}
 
 	var data: Dictionary = parsed
+	if int(data.get("version", 0)) != 1:
+		push_warning("Fallen Forest: unsupported save version; starting a fresh run.")
+		return {}
+	if not data.has("run_seed") or int(data.get("run_seed", 0)) <= 0:
+		push_warning("Fallen Forest: save has no valid run seed; starting a fresh run.")
+		return {}
+
 	GameState.restore(data)
 	has_player_position = bool(data.get("has_player_position", false))
-	var p: Array = data.get("player_position", [0.0, 0.0, 0.0])
-	if p.size() >= 3:
-		last_player_position = Vector3(float(p[0]), float(p[1]), float(p[2]))
+	var position_value = data.get("player_position", null)
+	if has_player_position and position_value is Array and position_value.size() >= 3:
+		last_player_position = Vector3(
+			float(position_value[0]),
+			float(position_value[1]),
+			float(position_value[2])
+		)
+	else:
+		has_player_position = false
+		last_player_position = Vector3.ZERO
 	return data
 
 func delete_run() -> void:
 	if FileAccess.file_exists(SAVE_PATH):
-		DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
+		var error := DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
+		if error != OK:
+			push_warning("Fallen Forest: unable to remove old save file (error %d)." % error)
 	GameState.begin_new_run(0)
 	last_player_position = Vector3.ZERO
 	has_player_position = false
