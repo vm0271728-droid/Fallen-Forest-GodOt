@@ -1,5 +1,6 @@
 extends SceneTree
 
+# Isolated regression test for the historical missing floor/tree collision bug.
 const TERRAIN_SCRIPT := preload("res://scripts/world/terrain_generator.gd")
 const TREE_COLLISION_SCRIPT := preload("res://scripts/world/tree_collision_manager.gd")
 
