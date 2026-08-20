@@ -95,7 +95,7 @@ func _validate_terrain_raycast(terrain: Node, player: CharacterBody3D) -> void:
 	query.collision_mask = 1
 	if player != null:
 		query.exclude = [player.get_rid()]
-	var hit := terrain.get_world_3d().direct_space_state.intersect_ray(query)
+	var hit: Dictionary = terrain.get_world_3d().direct_space_state.intersect_ray(query)
 	if hit.is_empty():
 		_fail("Physics ray did not hit terrain")
 		return
@@ -145,7 +145,7 @@ func _validate_tree_collision(forest: Node, manager: Node, player: CharacterBody
 	query.collision_mask = 1
 	if player != null:
 		query.exclude = [player.get_rid()]
-	var hit := manager.get_world_3d().direct_space_state.intersect_ray(query)
+	var hit: Dictionary = manager.get_world_3d().direct_space_state.intersect_ray(query)
 	if hit.is_empty():
 		_fail("Physics ray passed through an active tree trunk collider")
 		return
