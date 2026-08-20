@@ -64,7 +64,7 @@ jobs:
           export/android/debug_keystore_user = "androiddebugkey"
           export/android/debug_keystore_pass = "android"
           EOF
-      - name: Import and build APK
+      - name: Import, smoke-test and build APK
         id: compile
         working-directory: NocturneForestDemo
         shell: bash
@@ -74,14 +74,25 @@ jobs:
           mkdir -p build
           timeout 420s "$GODOT" --headless --path . --import > /tmp/nocturne-import.log 2>&1
           IMPORT_CODE=$?
+          SMOKE_CODE=999
           BUILD_CODE=999
           if [ "$IMPORT_CODE" = "0" ]; then
+            timeout 25s "$GODOT" --headless --path . --quit-after 12 > /tmp/nocturne-smoke.log 2>&1
+            SMOKE_CODE=$?
+            if grep -Eqi "SCRIPT ERROR|Parse Error|Invalid call|Invalid access" /tmp/nocturne-smoke.log; then
+              SMOKE_CODE=1
+            fi
+          else
+            echo "Smoke test skipped because import failed." > /tmp/nocturne-smoke.log
+          fi
+          if [ "$IMPORT_CODE" = "0" ] && [ "$SMOKE_CODE" = "0" ]; then
             "$GODOT" --headless --path . --export-debug "Android" "build/NocturneForest.apk" > /tmp/nocturne-export.log 2>&1
             BUILD_CODE=$?
           else
-            echo "Export skipped because import failed." > /tmp/nocturne-export.log
+            echo "Export skipped because import or smoke test failed." > /tmp/nocturne-export.log
           fi
           echo "import_code=$IMPORT_CODE" >> "$GITHUB_OUTPUT"
+          echo "smoke_code=$SMOKE_CODE" >> "$GITHUB_OUTPUT"
           echo "build_code=$BUILD_CODE" >> "$GITHUB_OUTPUT"
           exit 0
       - name: Publish build result to branch
@@ -93,13 +104,17 @@ jobs:
             echo "Nocturne Forest Android build"
             echo "commit=$GITHUB_SHA"
             echo "import_code=${{ steps.compile.outputs.import_code }}"
+            echo "smoke_code=${{ steps.compile.outputs.smoke_code }}"
             echo "build_code=${{ steps.compile.outputs.build_code }}"
             echo
             echo "--- import log ---"
-            tail -n 200 /tmp/nocturne-import.log 2>/dev/null || true
+            tail -n 180 /tmp/nocturne-import.log 2>/dev/null || true
+            echo
+            echo "--- smoke log ---"
+            tail -n 180 /tmp/nocturne-smoke.log 2>/dev/null || true
             echo
             echo "--- export log ---"
-            tail -n 240 /tmp/nocturne-export.log 2>/dev/null || true
+            tail -n 220 /tmp/nocturne-export.log 2>/dev/null || true
           } > APK_OUTPUT/build_status.txt
           if [ -s NocturneForestDemo/build/NocturneForest.apk ]; then
             cp NocturneForestDemo/build/NocturneForest.apk APK_OUTPUT/NocturneForest.apk
@@ -115,5 +130,6 @@ jobs:
         shell: bash
         run: |
           test "${{ steps.compile.outputs.import_code }}" = "0"
+          test "${{ steps.compile.outputs.smoke_code }}" = "0"
           test "${{ steps.compile.outputs.build_code }}" = "0"
           test -s APK_OUTPUT/NocturneForest.apk
