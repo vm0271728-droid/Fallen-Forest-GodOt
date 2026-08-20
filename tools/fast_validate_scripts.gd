@@ -30,7 +30,7 @@ func _scan_dir(path: String) -> void:
 		if dir.current_is_dir():
 			_scan_dir(child_path)
 		elif entry.get_extension().to_lower() == "gd":
-			var resource := ResourceLoader.load(child_path, "GDScript", ResourceLoader.CACHE_MODE_IGNORE)
-			if resource == null:
+			var resource: Resource = ResourceLoader.load(child_path, "", ResourceLoader.CACHE_MODE_IGNORE)
+			if not is_instance_valid(resource):
 				_failures.append("Failed to compile %s" % child_path)
 	dir.list_dir_end()
