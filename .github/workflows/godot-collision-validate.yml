@@ -1,0 +1,108 @@
+name: Validate core world collisions
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "scripts/world/terrain_generator.gd"
+      - "scripts/world/tree_collision_manager.gd"
+      - "tools/validate_collision_core.gd"
+      - ".github/workflows/godot-collision-validate.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: godot-collision-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate-collisions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download Godot 4.7.1 stable
+        shell: bash
+        run: |
+          curl -L --fail --retry 3 \
+            -o /tmp/godot.zip \
+            https://github.com/godotengine/godot/releases/download/4.7.1-stable/Godot_v4.7.1-stable_linux.x86_64.zip
+          unzip -q /tmp/godot.zip -d /tmp/godot
+          chmod +x /tmp/godot/Godot_v4.7.1-stable_linux.x86_64
+
+      - name: Run isolated physics validation
+        id: collision
+        shell: bash
+        run: |
+          set +e
+          timeout 90s /tmp/godot/Godot_v4.7.1-stable_linux.x86_64 \
+            --headless --path . \
+            --script res://tools/validate_collision_core.gd \
+            > /tmp/collision-core.log 2>&1
+          CODE=$?
+          cat /tmp/collision-core.log
+
+          if ! grep -q 'COLLISION_CORE_VALIDATION: PASS' /tmp/collision-core.log; then
+            CODE=1
+          fi
+          if grep -Eq 'SCRIPT ERROR:|Parse Error|Compile Error|Invalid call|Invalid access|Failed to load script' /tmp/collision-core.log; then
+            CODE=1
+          fi
+
+          echo "code=$CODE" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Record collision validation result
+        if: always()
+        shell: bash
+        run: |
+          CODE='${{ steps.collision.outputs.code }}'
+          if [ -z "$CODE" ]; then CODE=999; fi
+          mkdir -p docs
+          {
+            echo '# Core floor/tree collision validation'
+            echo
+            echo '- Engine: Godot 4.7.1 stable'
+            echo "- Branch: \`$GITHUB_REF_NAME\`"
+            echo "- Tested commit: \`$GITHUB_SHA\`"
+            echo "- Exit code: \`$CODE\`"
+            echo '- Checks: HeightMapShape3D, uniform physics scale, CharacterBody3D test_move, terrain raycast, active tree CylinderShape3D, tree raycast.'
+            if [ "$CODE" = "0" ]; then
+              echo '- Result: **PASS**'
+            else
+              echo '- Result: **FAIL**'
+            fi
+            echo
+            echo '```text'
+            cat /tmp/collision-core.log 2>/dev/null || true
+            echo '```'
+          } > docs/COLLISION_CORE_VALIDATION.md
+
+          git config user.name "Fallen Forest Collision Validator"
+          git config user.email "actions@users.noreply.github.com"
+          git add docs/COLLISION_CORE_VALIDATION.md
+          if ! git diff --cached --quiet; then
+            git pull --rebase origin "$GITHUB_REF_NAME" || true
+            git add docs/COLLISION_CORE_VALIDATION.md
+            git commit -m "Record collision validation for $GITHUB_SHA"
+            if ! git push origin HEAD:"$GITHUB_REF_NAME"; then
+              git pull --rebase origin "$GITHUB_REF_NAME" || true
+              git add docs/COLLISION_CORE_VALIDATION.md
+              git commit -m "Record collision validation for $GITHUB_SHA" 2>/dev/null || true
+              git push origin HEAD:"$GITHUB_REF_NAME" || true
+            fi
+          fi
+
+      - name: Enforce collision validation result
+        if: always()
+        shell: bash
+        run: |
+          CODE='${{ steps.collision.outputs.code }}'
+          if [ -z "$CODE" ] || [ "$CODE" != "0" ]; then
+            exit 1
+          fi
