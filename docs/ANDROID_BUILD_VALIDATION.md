@@ -2,7 +2,7 @@
 
 - Engine: Godot 4.7.1 stable
 - Branch: `fix/android11-integrity`
-- Tested commit: `e5ffdc598d1e7fd7aa9811b6fd4132e8e580cd45`
+- Tested commit: `6db91f305b0246a60aaac0d061b20627ef65fae3`
 - Required minimum: Android 11 / API 30
 - Required ABI: arm64-v8a only
 - Import exit code: `0`
