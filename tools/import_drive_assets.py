@@ -23,11 +23,18 @@ PRIMARY_PACKS = {
     "the-boiled-one-horror-game-boiled-one.zip": "characters/boiled_one",
     "Видео для скримера вареного.zip": "video/boiled_one",
 }
-APPROVED_SCREAMERS = {"jakes-screamer.mp3", "the-screamer-shared-between-mallie-and-jenny.mp3"}
-LOW_POLY_SOURCE_FILES = {"Tree_Pack.fbx", "Tree_Pack.obj", "Tree_Pack.mtl"}
+APPROVED_SCREAMERS = {
+    "jakes-screamer.mp3",
+    "the-screamer-shared-between-mallie-and-jenny.mp3",
+}
+LOW_POLY_RUNTIME_SOURCE_FILES = {"Tree_Pack.fbx"}
+LOW_POLY_ARCHIVE_SOURCE_FILES = {"Tree_Pack.obj", "Tree_Pack.mtl"}
 LOW_POLY_TREE_TEXTURE_FOLDERS = {"TREES_HIGH_POLY", "TREES_LOW_POLY"}
 LOW_POLY_FBX_IMPORT_DEPENDENCIES = {
-    "ROCKS_AO.png", "ROCKS_DIFFUSE.png", "ROCKS_NORMALtest.png", "ROCKS_ROUGHNESS.png"
+    "ROCKS_AO.png",
+    "ROCKS_DIFFUSE.png",
+    "ROCKS_NORMALtest.png",
+    "ROCKS_ROUGHNESS.png",
 }
 
 
@@ -60,6 +67,7 @@ def import_primary(path: Path) -> None:
     with zipfile.ZipFile(path) as outer:
         for archive_name, relative_destination in PRIMARY_PACKS.items():
             extract_nested(outer, archive_name, ASSETS / relative_destination)
+
         destination = ASSETS / "audio" / "screamers"
         destination.mkdir(parents=True, exist_ok=True)
         with zipfile.ZipFile(io.BytesIO(outer.read("скримеры.zip"))) as nested:
@@ -110,11 +118,13 @@ def split_sequential_obj_objects(source_obj: Path, destination: Path) -> list[st
         with (destination / f"{current_name}.obj").open("w", encoding="utf-8") as output:
             output.write("mtllib ../firs.mtl\n")
             output.write(f"o {current_name}\n")
-            output.write("\n".join(geometry_lines) + "\n")
+            if geometry_lines:
+                output.write("\n".join(geometry_lines) + "\n")
             for material, faces in faces_by_material.items():
                 if material:
                     output.write(f"usemtl {material}\n")
-                output.write("\n".join(faces) + "\n")
+                if faces:
+                    output.write("\n".join(faces) + "\n")
 
     with source_obj.open("r", encoding="utf-8", errors="ignore") as src:
         for raw_line in src:
@@ -122,7 +132,9 @@ def split_sequential_obj_objects(source_obj: Path, destination: Path) -> list[st
             if line.startswith("o "):
                 flush_object()
                 object_name = line[2:].strip()
-                current_name = "".join(c if c.isalnum() or c in "_-" else "_" for c in object_name)
+                current_name = "".join(
+                    c if c.isalnum() or c in "_-" else "_" for c in object_name
+                )
                 names.append(current_name)
                 geometry_lines = []
                 faces_by_material = {}
@@ -131,15 +143,18 @@ def split_sequential_obj_objects(source_obj: Path, destination: Path) -> list[st
                 continue
             if line.startswith("v "):
                 global_counts[0] += 1
-                if current_name is not None: geometry_lines.append(line)
+                if current_name is not None:
+                    geometry_lines.append(line)
                 continue
             if line.startswith("vt "):
                 global_counts[1] += 1
-                if current_name is not None: geometry_lines.append(line)
+                if current_name is not None:
+                    geometry_lines.append(line)
                 continue
             if line.startswith("vn "):
                 global_counts[2] += 1
-                if current_name is not None: geometry_lines.append(line)
+                if current_name is not None:
+                    geometry_lines.append(line)
                 continue
             if current_name is None:
                 continue
@@ -149,15 +164,24 @@ def split_sequential_obj_objects(source_obj: Path, destination: Path) -> list[st
             elif line.startswith("f "):
                 tokens = line.split()
                 remapped = [_remap_obj_face_token(token, offsets) for token in tokens[1:]]
-                faces_by_material.setdefault(current_material, []).append("f " + " ".join(remapped))
+                faces_by_material.setdefault(current_material, []).append(
+                    "f " + " ".join(remapped)
+                )
+
     flush_object()
 
     if names != ["fir_1", "fir_3", "fir_2", "fir_4"]:
         raise RuntimeError(f"Unexpected dead-fir object layout: {names}")
     for name in names:
-        sections = sum(1 for line in (destination / f"{name}.obj").open("r", encoding="utf-8") if line.startswith("usemtl "))
+        sections = sum(
+            1
+            for line in (destination / f"{name}.obj").open("r", encoding="utf-8")
+            if line.startswith("usemtl ")
+        )
         if sections > 16:
-            raise RuntimeError(f"Dead-fir variant {name} still has too many material sections: {sections}")
+            raise RuntimeError(
+                f"Dead-fir variant {name} still has too many material sections: {sections}"
+            )
     return names
 
 
@@ -167,7 +191,17 @@ def import_dead_firs(outer: zipfile.ZipFile) -> None:
     with zipfile.ZipFile(io.BytesIO(outer.read("4-dead-firs-trees-pack-high-poly (1).zip"))) as pack:
         with zipfile.ZipFile(io.BytesIO(pack.read("source/firs.zip"))) as source_zip:
             safe_extract_zip(source_zip, destination)
-    split_sequential_obj_objects(destination / "firs.obj", destination / "variants")
+
+    raw_source = destination / "firs.obj"
+    split_sequential_obj_objects(raw_source, destination / "variants")
+
+    archive = destination / "source_archive"
+    archive.mkdir(parents=True, exist_ok=True)
+    (archive / ".gdignore").write_text(
+        "# Canonical multi-tree source; use generated ../variants/fir_*.obj at runtime.\n",
+        encoding="utf-8",
+    )
+    shutil.move(str(raw_source), str(archive / "firs.obj"))
 
 
 def import_low_poly_tree_pack(outer: zipfile.ZipFile) -> None:
@@ -175,28 +209,55 @@ def import_low_poly_tree_pack(outer: zipfile.ZipFile) -> None:
     reset_dir(destination)
     with zipfile.ZipFile(io.BytesIO(outer.read("low-poly-forest-tree-pack.zip"))) as pack:
         rar_bytes = pack.read("source/LOW POLY FOREST TREE PACK.rar")
+
     with tempfile.TemporaryDirectory(prefix="fallenforest-lowpoly-") as temp_dir:
         temp = Path(temp_dir)
         rar_path = temp / "low_poly_tree_pack.rar"
         extract_root = temp / "extracted"
         rar_path.write_bytes(rar_bytes)
         extract_root.mkdir(parents=True, exist_ok=True)
-        subprocess.run(["7z", "x", "-y", f"-o{extract_root}", str(rar_path)], check=True)
+        subprocess.run(
+            ["7z", "x", "-y", f"-o{extract_root}", str(rar_path)],
+            check=True,
+        )
+
         source_root = extract_root / "FOREST_TREE_PACK" / "SOURCE"
         texture_root = extract_root / "FOREST_TREE_PACK" / "TEXTURES"
         source_destination = destination / "source"
+        archive_destination = destination / "source_archive"
         texture_destination = destination / "textures"
         source_destination.mkdir(parents=True, exist_ok=True)
+        archive_destination.mkdir(parents=True, exist_ok=True)
         texture_destination.mkdir(parents=True, exist_ok=True)
-        for filename in sorted(LOW_POLY_SOURCE_FILES):
-            shutil.copy2(source_root / filename, source_destination / filename)
+
+        (archive_destination / ".gdignore").write_text(
+            "# Backup OBJ/MTL from the canonical tree pack; runtime uses ../source/Tree_Pack.fbx.\n",
+            encoding="utf-8",
+        )
+
+        for filename in sorted(LOW_POLY_RUNTIME_SOURCE_FILES):
+            source = source_root / filename
+            if not source.exists():
+                raise RuntimeError(f"Expected low-poly runtime source missing: {filename}")
+            shutil.copy2(source, source_destination / filename)
+
+        for filename in sorted(LOW_POLY_ARCHIVE_SOURCE_FILES):
+            source = source_root / filename
+            if not source.exists():
+                raise RuntimeError(f"Expected low-poly backup source missing: {filename}")
+            shutil.copy2(source, archive_destination / filename)
+
         for filename in sorted(LOW_POLY_FBX_IMPORT_DEPENDENCIES):
             source = texture_root / filename
             if not source.exists():
                 raise RuntimeError(f"Expected FBX dependency missing: {filename}")
             shutil.copy2(source, source_destination / filename)
+
         for folder_name in sorted(LOW_POLY_TREE_TEXTURE_FOLDERS):
-            shutil.copytree(texture_root / folder_name, texture_destination / folder_name)
+            source_folder = texture_root / folder_name
+            if not source_folder.exists():
+                raise RuntimeError(f"Expected low-poly tree texture folder missing: {folder_name}")
+            shutil.copytree(source_folder, texture_destination / folder_name)
 
 
 def import_trees(path: Path) -> None:
@@ -208,24 +269,44 @@ def import_trees(path: Path) -> None:
 
 def write_manifest() -> None:
     model_exts = {".fbx", ".glb", ".gltf", ".obj"}
-    models = sorted(p.relative_to(ROOT).as_posix() for p in ASSETS.rglob("*") if p.is_file() and p.suffix.lower() in model_exts)
+    models = sorted(
+        p.relative_to(ROOT).as_posix()
+        for p in ASSETS.rglob("*")
+        if p.is_file() and p.suffix.lower() in model_exts
+    )
     text = [
-        "# Imported asset inventory", "",
-        "Generated by `tools/import_drive_assets.py` from the project owner's canonical Google Drive archives.", "",
-        "## 3D model files", "",
+        "# Imported asset inventory",
+        "",
+        "Generated by `tools/import_drive_assets.py` from the project owner's canonical Google Drive archives.",
+        "",
+        "## 3D model files",
+        "",
     ]
     text.extend(f"- `{model}`" for model in models)
     text.extend([
-        "", "## Tree-pack rule", "",
-        "The tree archives are packs, not single-tree assets. Runtime forest scattering uses individual mesh variants, not the whole pack as one prop.", "",
-        "Dead-fir variants collapse repeated material sections to one section per material to remain below Godot's mesh-surface limit.", "",
-        "Low-poly rocks/ground are excluded from runtime. Original ROCKS_* images are retained beside Tree_Pack.fbx only because the canonical FBX references them during import.", "",
-        "## Canonical audio rule", "",
-        "Only the two approved Locust screamers are imported. `amazing-grace-analog-horror.mp3` is intentionally excluded.", "",
-        "## Provenance", "",
-        "Drive is the source of truth for these user-provided project files. Do not silently replace them with unrelated Internet assets.", "",
+        "",
+        "## Tree-pack rule",
+        "",
+        "The tree archives are packs, not single-tree assets. Runtime forest scattering uses individual mesh variants, not the whole pack as one prop.",
+        "",
+        "Dead-fir variants collapse repeated material sections to one section per material to remain below Godot's mesh-surface limit. The original all-in-one OBJ is retained under a `.gdignore` source archive.",
+        "",
+        "Low-poly runtime uses `Tree_Pack.fbx`. The canonical OBJ/MTL backup is retained under a `.gdignore` source archive because its absolute authoring paths are not portable Godot import paths.",
+        "",
+        "Low-poly rocks/ground are excluded from runtime. Original ROCKS_* images are retained beside Tree_Pack.fbx only because the canonical FBX references them during import.",
+        "",
+        "## Canonical audio rule",
+        "",
+        "Only the two approved Locust screamers are imported. `amazing-grace-analog-horror.mp3` is intentionally excluded.",
+        "",
+        "## Provenance",
+        "",
+        "Drive is the source of truth for these user-provided project files. Do not silently replace them with unrelated Internet assets.",
+        "",
     ])
-    (ROOT / "docs" / "ASSET_INVENTORY.md").write_text("\n".join(text), encoding="utf-8")
+    (ROOT / "docs" / "ASSET_INVENTORY.md").write_text(
+        "\n".join(text), encoding="utf-8"
+    )
 
 
 def main() -> None:
