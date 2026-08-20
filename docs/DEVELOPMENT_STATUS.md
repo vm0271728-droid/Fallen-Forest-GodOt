@@ -5,7 +5,7 @@
 **Milestone 0.2 — First Horror Playable (in progress)**
 
 Target engine: **Godot 4.7.1 stable**  
-Target platform: **Android, landscape, ARM64, mobile renderer, 60 FPS target**
+Target platform: **Android 11+ (API 30+), landscape, ARM64, mobile renderer, 60 FPS target**
 
 ## Implemented foundation
 
@@ -111,12 +111,7 @@ Both include:
 - physical lit flashlight drop when acquired;
 - red/black death presentation;
 - a distinct approved screamer;
-- death menu.
-
-Death menu:
-
-- Continue;
-- Main Menu.
+- death recovery to the saved run state.
 
 Continue restores the saved run under blackout. A final chase is recreated after Continue when the saved run is already in final-run state.
 
@@ -162,7 +157,7 @@ Two CI layers exist:
 - Separate Main Menu smoke test.
 - Separate gameplay-scene smoke test.
 - Asset inspection report.
-- `cancel-in-progress` is disabled so a full 3D validation can finish while development continues.
+- Validation report is written back only from `main`; feature-branch validation cannot push into `main`.
 
 ## Android build pipeline
 
@@ -170,8 +165,9 @@ Two CI layers exist:
 
 - package: `com.fallenforest.horror`
 - version: `0.2.0`
-- minimum SDK: 23
+- minimum SDK: **30 (Android 11)**
 - target SDK: 35
+- Gradle build enabled so `minSdk` is applied to the generated Android manifest
 - ARM64 enabled
 - ARMv7/x86/x86_64 disabled
 - immersive mode
@@ -180,21 +176,30 @@ Two CI layers exist:
 GitHub Actions workflow `android-debug-apk.yml`:
 
 - installs Java 17;
-- configures Android SDK 35;
+- configures Android SDK Platform 35 + Build-Tools 35.0.1;
 - downloads official Godot 4.7.1 binary + export templates;
 - creates a temporary debug keystore;
 - imports the project;
+- installs the Godot Android Gradle build template during export;
 - exports `Builds/Android/FallenForest-debug.apk`;
-- publishes it as `FallenForest-Android-debug` artifact when successful.
+- verifies the produced APK reports `minSdk=30` and `targetSdk=35`;
+- verifies ARM64 native libraries are present and ARMv7/x86/x86_64 are absent;
+- publishes it as `FallenForest-Android11plus-debug` artifact when successful.
 
 **Do not treat the Android pipeline as release signing.** Release keystore handling will be added separately and must not commit private signing material.
 
+## Current integrity notes
+
+- The old full validation report predates the current tree-pack, viewmodel, menu, T3 and Android changes and must not be treated as proof for the current checkpoint.
+- The canonical asset importer previously logged `MAX_MESH_SURFACES` errors while still returning exit code 0; a fresh full import is required to determine whether those warnings remain with the current assets.
+- Android startup now enters the lightweight Main Menu instead of constructing terrain, forest, grass and viewmodel immediately at process launch.
+
 ## Next technical priorities
 
-1. Obtain a fresh completed full 3D smoke result for the current multi-tree/viewmodel/menu checkpoint.
-2. Obtain and inspect the first successful Android debug APK artifact; fix export configuration if CI reports a concrete Android error.
-3. Calibrate real FPS finger/wrist poses around flashlight and document using imported bone rest axes.
-4. Visually calibrate the five Locust hide poses and arm-supported chase against the canonical FBX rest axes.
-5. Expand environment dressing and landmarks without importing the excluded low-poly grass/bush payload.
-6. Add ambience/foley only from approved/licensed sources; keep Hard Silence behavior independent from the chosen ambience assets.
-7. Perform physical Android-device profiling and tune MultiMesh visibility ranges, pooled collision radius and viewmodel resolution for the 60 FPS target.
+1. Obtain a fresh completed full 3D smoke result for the current menu/loading/T3/tree checkpoint.
+2. Obtain and inspect the first successful Android 11+ debug APK artifact and confirm launch on a physical Android 11+ ARM64 device.
+3. Profile startup/gameplay memory and frame time on Android, especially the 3250-tree and 16,000-grass MultiMeshes plus the 1280x720 viewmodel SubViewport.
+4. Calibrate real FPS finger/wrist poses around flashlight and document using imported bone rest axes.
+5. Visually calibrate the five Locust hide poses and arm-supported chase against the canonical FBX rest axes.
+6. Expand environment dressing and landmarks without importing the excluded low-poly grass/bush payload.
+7. Add ambience/foley only from approved/licensed sources; keep Hard Silence behavior independent from the chosen ambience assets.
