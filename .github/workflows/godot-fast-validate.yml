@@ -6,7 +6,7 @@ on:
     paths:
       - "project.godot"
       - "scripts/**"
-      - "tools/fast_validate_scripts.gd"
+      - "tools/*.gd"
       - ".github/workflows/godot-fast-validate.yml"
 
 permissions:
@@ -23,6 +23,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Download Godot 4.7.1 stable
         run: |
@@ -39,7 +41,7 @@ jobs:
           cp project.godot /tmp/ff-fast/project.godot
           sed -i '/^run\/main_scene=/d' /tmp/ff-fast/project.godot
           cp -R scripts /tmp/ff-fast/scripts
-          cp tools/fast_validate_scripts.gd /tmp/ff-fast/tools/
+          find tools -maxdepth 1 -type f -name '*.gd' -exec cp '{}' /tmp/ff-fast/tools/ \;
 
       - name: Compile every GDScript
         id: compile
@@ -52,7 +54,7 @@ jobs:
             > /tmp/ff-fast-validate.log 2>&1
           CODE=$?
 
-          if grep -Eq 'SCRIPT ERROR: (Parse|Compile) Error|Failed to load script|Compilation failed' /tmp/ff-fast-validate.log; then
+          if grep -Eq 'SCRIPT ERROR: (Parse|Compile) Error|Failed to load script|Compilation failed|Parse Error|Compile Error' /tmp/ff-fast-validate.log; then
             CODE=1
           fi
 
@@ -60,8 +62,8 @@ jobs:
           echo "code=$CODE" >> "$GITHUB_OUTPUT"
           exit 0
 
-      - name: Record fast validation result on main
-        if: always() && github.ref == 'refs/heads/main'
+      - name: Record fast validation result
+        if: always()
         shell: bash
         run: |
           CODE='${{ steps.compile.outputs.code }}'
@@ -71,6 +73,7 @@ jobs:
             echo '# Fast Godot script validation'
             echo
             echo '- Engine: Godot 4.7.1 stable'
+            echo "- Branch: \`$GITHUB_REF_NAME\`"
             echo "- Tested commit: \`$GITHUB_SHA\`"
             echo "- Exit code: \`$CODE\`"
             if [ "$CODE" = "0" ]; then
@@ -88,10 +91,10 @@ jobs:
           git config user.email "actions@users.noreply.github.com"
           git add docs/GODOT_FAST_VALIDATION.md
           if ! git diff --cached --quiet; then
-            git pull --rebase origin main || true
+            git pull --rebase origin "$GITHUB_REF_NAME" || true
             git add docs/GODOT_FAST_VALIDATION.md
             git commit -m "Record fast Godot validation for $GITHUB_SHA"
-            git push origin HEAD:main || true
+            git push origin HEAD:"$GITHUB_REF_NAME" || true
           fi
 
       - name: Enforce validation result
