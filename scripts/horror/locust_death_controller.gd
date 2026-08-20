@@ -1,6 +1,6 @@
 extends Node
 
-signal death_choice_selected(choice: String)
+signal death_choice_selected
 
 const FRONT_SCREAMER_PATH := "res://assets/audio/screamers/jakes-screamer.mp3"
 const REAR_SCREAMER_PATH := "res://assets/audio/screamers/the-screamer-shared-between-mallie-and-jenny.mp3"
@@ -14,6 +14,7 @@ var _black: ColorRect
 var _audio: AudioStreamPlayer
 var _death_menu: Control
 var _choice_locked := false
+var _selected_choice := ""
 
 func play_and_recover(player: CharacterBody3D, locust: Node3D, terrain: Node) -> void:
 	if player == null or locust == null:
@@ -58,7 +59,8 @@ func play_and_recover(player: CharacterBody3D, locust: Node3D, terrain: Node) ->
 	await get_tree().create_timer(0.18).timeout
 
 	_show_death_menu()
-	var choice: String = await death_choice_selected
+	await death_choice_selected
+	var choice := _selected_choice
 	_hide_death_menu()
 
 	if choice == "main_menu":
@@ -217,6 +219,7 @@ func _build_death_menu() -> void:
 
 func _show_death_menu() -> void:
 	_choice_locked = false
+	_selected_choice = ""
 	if is_instance_valid(_death_menu):
 		_death_menu.visible = true
 
@@ -228,4 +231,5 @@ func _select_death_choice(choice: String) -> void:
 	if _choice_locked:
 		return
 	_choice_locked = true
-	death_choice_selected.emit(choice)
+	_selected_choice = choice
+	death_choice_selected.emit()
