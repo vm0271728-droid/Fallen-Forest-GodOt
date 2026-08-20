@@ -32,12 +32,10 @@ jobs:
 
       - name: Download Godot 4.7.1 stable
         run: |
-          curl -L --fail --retry 3 \
-            -o /tmp/godot.zip \
+          curl -L --fail --retry 3 -o /tmp/godot.zip \
             https://github.com/godotengine/godot/releases/download/4.7.1-stable/Godot_v4.7.1-stable_linux.x86_64.zip
           unzip -q /tmp/godot.zip -d /tmp/godot
           chmod +x /tmp/godot/Godot_v4.7.1-stable_linux.x86_64
-          /tmp/godot/Godot_v4.7.1-stable_linux.x86_64 --version
 
       - name: Import, smoke-test and inspect project
         id: validation
@@ -46,64 +44,36 @@ jobs:
           set +e
           GODOT=/tmp/godot/Godot_v4.7.1-stable_linux.x86_64
 
-          timeout 360s "$GODOT" --headless --path . --import \
-            > /tmp/godot-import.log 2>&1
+          timeout 360s "$GODOT" --headless --path . --import > /tmp/godot-import.log 2>&1
           IMPORT_CODE=$?
-          cat /tmp/godot-import.log
-          if grep -Eq 'SCRIPT ERROR:|ERROR: Condition|Failed to load script|Compilation failed|Parse Error|Compile Error' /tmp/godot-import.log; then
-            IMPORT_CODE=1
-          fi
+          if grep -Eq 'SCRIPT ERROR:|ERROR: Condition|Failed to load script|Compilation failed|Parse Error|Compile Error' /tmp/godot-import.log; then IMPORT_CODE=1; fi
 
           MENU_CODE=0
           GAME_CODE=0
           PHYSICS_CODE=0
-          if [ "$IMPORT_CODE" = "0" ]; then
-            timeout 25s "$GODOT" --headless --path . \
-              --scene res://scenes/ui/main_menu.tscn --quit-after 6 \
-              > /tmp/godot-menu-smoke.log 2>&1
-            MENU_CODE=$?
-            cat /tmp/godot-menu-smoke.log
-            if grep -Eq 'SCRIPT ERROR:|Failed to load script|Compilation failed|Parse Error|Compile Error|Invalid call|Invalid access' /tmp/godot-menu-smoke.log; then
-              MENU_CODE=1
-            fi
-
-            timeout 70s "$GODOT" --headless --path . \
-              --scene res://scenes/main/main.tscn --quit-after 14 \
-              > /tmp/godot-game-smoke.log 2>&1
-            GAME_CODE=$?
-            cat /tmp/godot-game-smoke.log
-            if grep -Eq 'SCRIPT ERROR:|Failed to load script|Compilation failed|Parse Error|Compile Error|Invalid call|Invalid access' /tmp/godot-game-smoke.log; then
-              GAME_CODE=1
-            fi
-
-            timeout 90s "$GODOT" --headless --path . \
-              --scene res://tools/validate_collision_core.tscn \
-              > /tmp/godot-physics.log 2>&1
-            PHYSICS_CODE=$?
-            cat /tmp/godot-physics.log
-            if ! grep -q 'COLLISION_CORE_VALIDATION: PASS' /tmp/godot-physics.log; then
-              PHYSICS_CODE=1
-            fi
-            if grep -Eq 'SCRIPT ERROR:|Failed to load script|Compilation failed|Parse Error|Compile Error|Invalid call|Invalid access' /tmp/godot-physics.log; then
-              PHYSICS_CODE=1
-            fi
-          else
-            echo "Main-menu smoke test skipped because import failed." > /tmp/godot-menu-smoke.log
-            echo "Gameplay smoke test skipped because import failed." > /tmp/godot-game-smoke.log
-            echo "Runtime physics validation skipped because import failed." > /tmp/godot-physics.log
-          fi
-
           INSPECT_CODE=0
           if [ "$IMPORT_CODE" = "0" ]; then
-            timeout 120s "$GODOT" --headless --path . --script res://tools/inspect_assets.gd \
-              > /tmp/godot-assets.log 2>&1
+            timeout 25s "$GODOT" --headless --path . --scene res://scenes/ui/main_menu.tscn --quit-after 6 > /tmp/godot-menu-smoke.log 2>&1
+            MENU_CODE=$?
+            if grep -Eq 'SCRIPT ERROR:|Failed to load script|Parse Error|Compile Error|Invalid call|Invalid access' /tmp/godot-menu-smoke.log; then MENU_CODE=1; fi
+
+            timeout 70s "$GODOT" --headless --path . --scene res://scenes/main/main.tscn --quit-after 14 > /tmp/godot-game-smoke.log 2>&1
+            GAME_CODE=$?
+            if grep -Eq 'SCRIPT ERROR:|Failed to load script|Parse Error|Compile Error|Invalid call|Invalid access' /tmp/godot-game-smoke.log; then GAME_CODE=1; fi
+
+            timeout 90s "$GODOT" --headless --path . --scene res://tools/validate_collision_core.tscn > /tmp/godot-physics.log 2>&1
+            PHYSICS_CODE=$?
+            if ! grep -q 'COLLISION_CORE_VALIDATION: PASS' /tmp/godot-physics.log; then PHYSICS_CODE=1; fi
+            if grep -Eq 'SCRIPT ERROR:|Failed to load script|Parse Error|Compile Error|Invalid call|Invalid access' /tmp/godot-physics.log; then PHYSICS_CODE=1; fi
+
+            timeout 120s "$GODOT" --headless --path . --script res://tools/inspect_assets.gd > /tmp/godot-assets.log 2>&1
             INSPECT_CODE=$?
-            cat /tmp/godot-assets.log
-            if grep -Eq 'SCRIPT ERROR:|Failed to load script|Compilation failed|Parse Error|Compile Error|Invalid call|Invalid access' /tmp/godot-assets.log; then
-              INSPECT_CODE=1
-            fi
+            if grep -Eq 'SCRIPT ERROR:|Failed to load script|Parse Error|Compile Error|Invalid call|Invalid access' /tmp/godot-assets.log; then INSPECT_CODE=1; fi
           else
-            echo "Asset inspection skipped because import failed." > /tmp/godot-assets.log
+            echo 'Skipped because import failed.' > /tmp/godot-menu-smoke.log
+            echo 'Skipped because import failed.' > /tmp/godot-game-smoke.log
+            echo 'Skipped because import failed.' > /tmp/godot-physics.log
+            echo 'Skipped because import failed.' > /tmp/godot-assets.log
           fi
 
           CODE=$IMPORT_CODE
@@ -111,6 +81,7 @@ jobs:
           if [ "$CODE" = "0" ] && [ "$GAME_CODE" != "0" ]; then CODE=$GAME_CODE; fi
           if [ "$CODE" = "0" ] && [ "$PHYSICS_CODE" != "0" ]; then CODE=$PHYSICS_CODE; fi
           if [ "$CODE" = "0" ] && [ "$INSPECT_CODE" != "0" ]; then CODE=$INSPECT_CODE; fi
+
           echo "code=$CODE" >> "$GITHUB_OUTPUT"
           echo "import_code=$IMPORT_CODE" >> "$GITHUB_OUTPUT"
           echo "menu_code=$MENU_CODE" >> "$GITHUB_OUTPUT"
@@ -123,18 +94,13 @@ jobs:
         if: always()
         shell: bash
         run: |
-          CODE='${{ steps.validation.outputs.code }}'
-          IMPORT_CODE='${{ steps.validation.outputs.import_code }}'
-          MENU_CODE='${{ steps.validation.outputs.menu_code }}'
-          GAME_CODE='${{ steps.validation.outputs.game_code }}'
-          PHYSICS_CODE='${{ steps.validation.outputs.physics_code }}'
-          INSPECT_CODE='${{ steps.validation.outputs.inspect_code }}'
-          if [ -z "$CODE" ]; then CODE=999; fi
-          if [ -z "$IMPORT_CODE" ]; then IMPORT_CODE=999; fi
-          if [ -z "$MENU_CODE" ]; then MENU_CODE=999; fi
-          if [ -z "$GAME_CODE" ]; then GAME_CODE=999; fi
-          if [ -z "$PHYSICS_CODE" ]; then PHYSICS_CODE=999; fi
-          if [ -z "$INSPECT_CODE" ]; then INSPECT_CODE=999; fi
+          CODE='${{ steps.validation.outputs.code }}'; [ -n "$CODE" ] || CODE=999
+          IMPORT_CODE='${{ steps.validation.outputs.import_code }}'; [ -n "$IMPORT_CODE" ] || IMPORT_CODE=999
+          MENU_CODE='${{ steps.validation.outputs.menu_code }}'; [ -n "$MENU_CODE" ] || MENU_CODE=999
+          GAME_CODE='${{ steps.validation.outputs.game_code }}'; [ -n "$GAME_CODE" ] || GAME_CODE=999
+          PHYSICS_CODE='${{ steps.validation.outputs.physics_code }}'; [ -n "$PHYSICS_CODE" ] || PHYSICS_CODE=999
+          INSPECT_CODE='${{ steps.validation.outputs.inspect_code }}'; [ -n "$INSPECT_CODE" ] || INSPECT_CODE=999
+
           {
             echo '# Godot validation status'
             echo
@@ -149,34 +115,35 @@ jobs:
             echo "- Overall exit code: \`$CODE\`"
             if [ "$CODE" = "0" ]; then echo '- Result: **PASS**'; else echo '- Result: **FAIL**'; fi
             echo
-            echo '## Tail of import log'
+            echo '## MAX_MESH_SURFACES context'
             echo '```text'
-            tail -n 100 /tmp/godot-import.log 2>/dev/null || true
+            grep -n -B 12 -A 2 'MAX_MESH_SURFACES' /tmp/godot-import.log 2>/dev/null | head -n 700 || true
             echo '```'
             echo
-            echo '## Tail of main-menu smoke-test log'
+            echo '## Last imported resources'
             echo '```text'
-            tail -n 120 /tmp/godot-menu-smoke.log 2>/dev/null || true
+            grep -E 'reimport.*\|' /tmp/godot-import.log 2>/dev/null | tail -n 60 || true
             echo '```'
             echo
-            echo '## Tail of gameplay smoke-test log'
+            echo '## Import log tail'
             echo '```text'
-            tail -n 160 /tmp/godot-game-smoke.log 2>/dev/null || true
+            tail -n 120 /tmp/godot-import.log 2>/dev/null || true
             echo '```'
             echo
-            echo '## Runtime floor/tree physics log'
-            echo '```text'
-            tail -n 140 /tmp/godot-physics.log 2>/dev/null || true
-            echo '```'
+            echo '## Main-menu smoke'
+            echo '```text'; tail -n 80 /tmp/godot-menu-smoke.log 2>/dev/null || true; echo '```'
             echo
-            echo '## Tail of asset inspector log'
-            echo '```text'
-            tail -n 100 /tmp/godot-assets.log 2>/dev/null || true
-            echo '```'
+            echo '## Gameplay smoke'
+            echo '```text'; tail -n 120 /tmp/godot-game-smoke.log 2>/dev/null || true; echo '```'
+            echo
+            echo '## Floor/tree physics'
+            echo '```text'; tail -n 100 /tmp/godot-physics.log 2>/dev/null || true; echo '```'
+            echo
+            echo '## Asset inspector'
+            echo '```text'; tail -n 80 /tmp/godot-assets.log 2>/dev/null || true; echo '```'
           } > /tmp/GODOT_VALIDATION.md
-          if [ -f docs/ASSET_IMPORT_REPORT.md ]; then
-            cp docs/ASSET_IMPORT_REPORT.md /tmp/ASSET_IMPORT_REPORT.md
-          fi
+
+          if [ -f docs/ASSET_IMPORT_REPORT.md ]; then cp docs/ASSET_IMPORT_REPORT.md /tmp/ASSET_IMPORT_REPORT.md; fi
 
       - name: Publish validation report safely
         if: always()
@@ -197,12 +164,11 @@ jobs:
             git commit -m "Record Godot validation for $GITHUB_SHA"
             if git push origin HEAD:"$GITHUB_REF_NAME"; then PUBLISHED=1; break; fi
           done
-          if [ "$PUBLISHED" != "1" ]; then echo "Unable to publish Godot validation report after retries." >&2; fi
+          if [ "$PUBLISHED" != "1" ]; then exit 1; fi
 
       - name: Enforce validation result
         if: always()
         shell: bash
         run: |
           CODE='${{ steps.validation.outputs.code }}'
-          if [ -z "$CODE" ]; then CODE=999; fi
-          if [ "$CODE" != "0" ]; then exit "$CODE"; fi
+          if [ -z "$CODE" ] || [ "$CODE" != "0" ]; then exit 1; fi
