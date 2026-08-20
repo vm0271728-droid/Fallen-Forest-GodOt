@@ -7,6 +7,7 @@ on:
       - "scripts/world/terrain_generator.gd"
       - "scripts/world/tree_collision_manager.gd"
       - "tools/validate_collision_core.gd"
+      - "tools/validate_collision_core.tscn"
       - ".github/workflows/godot-collision-validate.yml"
 
 permissions:
@@ -42,7 +43,7 @@ jobs:
           set +e
           timeout 90s /tmp/godot/Godot_v4.7.1-stable_linux.x86_64 \
             --headless --path . \
-            --script res://tools/validate_collision_core.gd \
+            --scene res://tools/validate_collision_core.tscn \
             > /tmp/collision-core.log 2>&1
           CODE=$?
           cat /tmp/collision-core.log
