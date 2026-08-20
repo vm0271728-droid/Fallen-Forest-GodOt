@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://tools/validate_collision_core.gd" id="1_collision"]
+
+[node name="CollisionCoreValidation" type="Node"]
+script = ExtResource("1_collision")
