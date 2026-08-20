@@ -95,6 +95,14 @@ jobs:
           echo "smoke_code=$SMOKE_CODE" >> "$GITHUB_OUTPUT"
           echo "build_code=$BUILD_CODE" >> "$GITHUB_OUTPUT"
           exit 0
+      - name: Upload APK artifact
+        if: steps.compile.outputs.import_code == '0' && steps.compile.outputs.smoke_code == '0' && steps.compile.outputs.build_code == '0'
+        uses: actions/upload-artifact@v4
+        with:
+          name: NocturneForest-APK-v0.1.1
+          path: NocturneForestDemo/build/NocturneForest.apk
+          if-no-files-found: error
+          retention-days: 14
       - name: Publish build result to branch
         if: always()
         shell: bash
@@ -103,6 +111,7 @@ jobs:
           {
             echo "Nocturne Forest Android build"
             echo "commit=$GITHUB_SHA"
+            echo "run_id=$GITHUB_RUN_ID"
             echo "import_code=${{ steps.compile.outputs.import_code }}"
             echo "smoke_code=${{ steps.compile.outputs.smoke_code }}"
             echo "build_code=${{ steps.compile.outputs.build_code }}"
