@@ -13,7 +13,13 @@ ROOT = Path(__file__).resolve().parents[1]
 DEAD_FIRS = ROOT / "assets/environment/trees/dead_firs"
 DEAD_FIR_ARCHIVE = DEAD_FIRS / "source_archive"
 LOW_POLY = ROOT / "assets/environment/trees/low_poly_pack"
-FBX_DEPENDENCIES = ("ROCKS_AO.png", "ROCKS_DIFFUSE.png", "ROCKS_NORMALtest.png", "ROCKS_ROUGHNESS.png")
+LOW_POLY_ARCHIVE = LOW_POLY / "source_archive"
+FBX_DEPENDENCIES = (
+    "ROCKS_AO.png",
+    "ROCKS_DIFFUSE.png",
+    "ROCKS_NORMALtest.png",
+    "ROCKS_ROUGHNESS.png",
+)
 
 
 def expand_dead_firs() -> None:
@@ -41,12 +47,16 @@ def expand_dead_firs() -> None:
 def _restore_blob_from_history(relative_path: str, destination: Path) -> None:
     revisions = subprocess.run(
         ["git", "rev-list", "--all", "--", relative_path],
-        cwd=ROOT, check=True, capture_output=True, text=True,
+        cwd=ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
     ).stdout.splitlines()
     for revision in revisions:
         result = subprocess.run(
             ["git", "show", f"{revision}:{relative_path}"],
-            cwd=ROOT, capture_output=True,
+            cwd=ROOT,
+            capture_output=True,
         )
         if result.returncode == 0 and result.stdout:
             destination.write_bytes(result.stdout)
@@ -66,6 +76,24 @@ def restore_low_poly_fbx_dependencies() -> None:
         _restore_blob_from_history(historical_path, destination)
 
 
+def _archive_low_poly_obj_sources(source_dir: Path) -> None:
+    """Keep backup OBJ/MTL bytes in Git without exposing them to Godot's importer."""
+    LOW_POLY_ARCHIVE.mkdir(parents=True, exist_ok=True)
+    (LOW_POLY_ARCHIVE / ".gdignore").write_text(
+        "# Backup OBJ/MTL from the canonical tree pack; runtime uses ../source/Tree_Pack.fbx.\n",
+        encoding="utf-8",
+    )
+    for filename in ("Tree_Pack.obj", "Tree_Pack.mtl"):
+        root_source = source_dir / filename
+        archived_source = LOW_POLY_ARCHIVE / filename
+        if root_source.exists():
+            if archived_source.exists():
+                archived_source.unlink()
+            shutil.move(str(root_source), str(archived_source))
+        elif not archived_source.exists():
+            raise RuntimeError(f"Missing canonical low-poly backup source: {filename}")
+
+
 def expand_low_poly() -> None:
     source_dir = LOW_POLY / "source"
     rar_path = source_dir / "LOW POLY FOREST TREE PACK.rar"
@@ -73,7 +101,10 @@ def expand_low_poly() -> None:
         with tempfile.TemporaryDirectory(prefix="fallenforest-lowpoly-existing-") as temp_dir:
             extract_root = Path(temp_dir) / "extracted"
             extract_root.mkdir(parents=True, exist_ok=True)
-            subprocess.run(["7z", "x", "-y", f"-o{extract_root}", str(rar_path)], check=True)
+            subprocess.run(
+                ["7z", "x", "-y", f"-o{extract_root}", str(rar_path)],
+                check=True,
+            )
             pack_source = extract_root / "FOREST_TREE_PACK" / "SOURCE"
             for filename in ("Tree_Pack.fbx", "Tree_Pack.obj", "Tree_Pack.mtl"):
                 source = pack_source / filename
@@ -85,6 +116,7 @@ def expand_low_poly() -> None:
         raise RuntimeError(f"Missing low-poly tree pack source: {source_dir}")
 
     restore_low_poly_fbx_dependencies()
+    _archive_low_poly_obj_sources(source_dir)
 
     texture_dir = LOW_POLY / "textures"
     for path in texture_dir.iterdir() if texture_dir.exists() else []:
@@ -92,7 +124,10 @@ def expand_low_poly() -> None:
         if lower.startswith("rocks_") or lower.startswith("internal_ground"):
             path.unlink()
 
-    print("Low-poly source normalized; FBX import dependencies restored, rock meshes remain runtime-excluded.")
+    print(
+        "Low-poly source normalized; runtime FBX remains importable, backup OBJ/MTL are archived, "
+        "and rock meshes remain runtime-excluded."
+    )
 
 
 def main() -> None:
