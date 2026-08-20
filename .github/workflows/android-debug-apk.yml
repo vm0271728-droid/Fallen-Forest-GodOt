@@ -15,7 +15,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: fallen-forest-android-debug
+  group: fallen-forest-android-debug-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -43,7 +43,7 @@ jobs:
           sdkmanager \
             "platform-tools" \
             "platforms;android-35" \
-            "build-tools;35.0.0"
+            "build-tools;35.0.1"
 
       - name: Download Godot 4.7.1 and export templates
         shell: bash
@@ -99,20 +99,49 @@ jobs:
           timeout 420s /tmp/godot/Godot_v4.7.1-stable_linux.x86_64 \
             --headless --path . --import
 
-      - name: Export Android debug APK
+      - name: Export Android 11+ debug APK with Gradle
         shell: bash
         run: |
           mkdir -p Builds/Android
           /tmp/godot/Godot_v4.7.1-stable_linux.x86_64 \
             --headless --path . \
+            --install-android-build-template \
             --export-debug "Android" "Builds/Android/FallenForest-debug.apk"
           test -s Builds/Android/FallenForest-debug.apk
           ls -lh Builds/Android/FallenForest-debug.apk
 
+      - name: Verify APK manifest and ABI
+        shell: bash
+        run: |
+          APK="Builds/Android/FallenForest-debug.apk"
+          AAPT="$ANDROID_HOME/build-tools/35.0.1/aapt"
+          BADGING="$($AAPT dump badging "$APK")"
+          printf '%s\n' "$BADGING"
+
+          MIN_SDK="$(printf '%s\n' "$BADGING" | sed -n "s/.*sdkVersion:'\([^']*\)'.*/\1/p" | head -n1)"
+          TARGET_SDK="$(printf '%s\n' "$BADGING" | sed -n "s/.*targetSdkVersion:'\([^']*\)'.*/\1/p" | head -n1)"
+          if [ "$MIN_SDK" != "30" ]; then
+            echo "Expected Android minSdk 30 (Android 11), got: $MIN_SDK" >&2
+            exit 1
+          fi
+          if [ "$TARGET_SDK" != "35" ]; then
+            echo "Expected targetSdk 35, got: $TARGET_SDK" >&2
+            exit 1
+          fi
+
+          unzip -Z1 "$APK" | grep -q '^lib/arm64-v8a/' || {
+            echo "arm64-v8a native libraries are missing from APK" >&2
+            exit 1
+          }
+          if unzip -Z1 "$APK" | grep -Eq '^lib/(armeabi-v7a|x86|x86_64)/'; then
+            echo "APK unexpectedly contains a non-arm64 ABI" >&2
+            exit 1
+          fi
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: FallenForest-Android-debug
+          name: FallenForest-Android11plus-debug
           path: Builds/Android/FallenForest-debug.apk
           if-no-files-found: error
           retention-days: 14
