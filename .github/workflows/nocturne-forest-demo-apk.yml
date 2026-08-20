@@ -5,16 +5,12 @@ on:
     branches: ["nocturne-forest-apk-build"]
     paths:
       - "NocturneForestDemo/**"
-      - ".github/workflows/nocturne-forest-demo-apk.yml"
-  pull_request:
-    branches: ["main"]
-    paths:
-      - "NocturneForestDemo/**"
+      - "!NocturneForestDemo/build/**"
       - ".github/workflows/nocturne-forest-demo-apk.yml"
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -64,25 +60,56 @@ jobs:
           export/android/debug_keystore_user = "androiddebugkey"
           export/android/debug_keystore_pass = "android"
           EOF
-      - name: Import project
+      - name: Import and build APK
+        id: compile
         working-directory: NocturneForestDemo
         shell: bash
         run: |
-          timeout 420s /tmp/godot/Godot_v4.7.1-stable_linux.x86_64 --headless --path . --import
-      - name: Build APK
-        working-directory: NocturneForestDemo
-        shell: bash
-        run: |
+          set +e
+          GODOT=/tmp/godot/Godot_v4.7.1-stable_linux.x86_64
           mkdir -p build
-          /tmp/godot/Godot_v4.7.1-stable_linux.x86_64 --headless --path . --export-debug "Android" "build/NocturneForest.apk"
-          test -s build/NocturneForest.apk
-          file build/NocturneForest.apk
-          unzip -t build/NocturneForest.apk >/dev/null
-          ls -lh build/NocturneForest.apk
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: NocturneForest-Android11Plus
-          path: NocturneForestDemo/build/NocturneForest.apk
-          if-no-files-found: error
-          retention-days: 14
+          timeout 420s "$GODOT" --headless --path . --import > /tmp/nocturne-import.log 2>&1
+          IMPORT_CODE=$?
+          BUILD_CODE=999
+          if [ "$IMPORT_CODE" = "0" ]; then
+            "$GODOT" --headless --path . --export-debug "Android" "build/NocturneForest.apk" > /tmp/nocturne-export.log 2>&1
+            BUILD_CODE=$?
+          else
+            echo "Export skipped because import failed." > /tmp/nocturne-export.log
+          fi
+          echo "import_code=$IMPORT_CODE" >> "$GITHUB_OUTPUT"
+          echo "build_code=$BUILD_CODE" >> "$GITHUB_OUTPUT"
+          exit 0
+      - name: Publish build result to branch
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p APK_OUTPUT
+          {
+            echo "Nocturne Forest Android build"
+            echo "commit=$GITHUB_SHA"
+            echo "import_code=${{ steps.compile.outputs.import_code }}"
+            echo "build_code=${{ steps.compile.outputs.build_code }}"
+            echo
+            echo "--- import log ---"
+            tail -n 200 /tmp/nocturne-import.log 2>/dev/null || true
+            echo
+            echo "--- export log ---"
+            tail -n 240 /tmp/nocturne-export.log 2>/dev/null || true
+          } > APK_OUTPUT/build_status.txt
+          if [ -s NocturneForestDemo/build/NocturneForest.apk ]; then
+            cp NocturneForestDemo/build/NocturneForest.apk APK_OUTPUT/NocturneForest.apk
+            unzip -t APK_OUTPUT/NocturneForest.apk >/dev/null
+          fi
+          git config user.name "Nocturne APK Builder"
+          git config user.email "actions@users.noreply.github.com"
+          git add APK_OUTPUT/build_status.txt
+          if [ -f APK_OUTPUT/NocturneForest.apk ]; then git add -f APK_OUTPUT/NocturneForest.apk; fi
+          git commit -m "Publish Nocturne Forest APK" || true
+          git push origin HEAD:nocturne-forest-apk-build
+      - name: Verify build success
+        shell: bash
+        run: |
+          test "${{ steps.compile.outputs.import_code }}" = "0"
+          test "${{ steps.compile.outputs.build_code }}" = "0"
+          test -s APK_OUTPUT/NocturneForest.apk
