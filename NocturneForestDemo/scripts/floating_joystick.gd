@@ -1,12 +1,12 @@
 extends Control
 class_name FloatingJoystick
 
-var value: Vector2 = Vector2.ZERO
-var active_touch: int = -1
-var center: Vector2 = Vector2.ZERO
-var radius: float = 92.0
-var knob_radius: float = 38.0
-var visible_alpha: float = 0.0
+var value := Vector2.ZERO
+var active_touch := -1
+var center := Vector2.ZERO
+var radius := 92.0
+var knob_radius := 38.0
+var visible_alpha := 0.0
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -14,12 +14,12 @@ func _ready() -> void:
 	set_process(true)
 
 func _process(delta: float) -> void:
-	var target: float = 1.0 if active_touch >= 0 else 0.22
+	var target := 1.0 if active_touch >= 0 else 0.22
 	visible_alpha = lerpf(visible_alpha, target, 1.0 - exp(-7.0 * delta))
 	queue_redraw()
 
 func _input(event: InputEvent) -> void:
-	var viewport_size: Vector2 = get_viewport_rect().size
+	var viewport_size := get_viewport_rect().size
 	if event is InputEventScreenTouch:
 		if event.pressed and active_touch == -1 and event.position.x < viewport_size.x * 0.46 and event.position.y > viewport_size.y * 0.36:
 			active_touch = event.index
@@ -38,15 +38,15 @@ func _input(event: InputEvent) -> void:
 		queue_redraw()
 
 func _draw() -> void:
-	var viewport_size: Vector2 = get_viewport_rect().size
-	var c: Vector2 = center
+	var viewport_size := get_viewport_rect().size
+	var c := center
 	if active_touch < 0:
 		c = Vector2(viewport_size.x * 0.17, viewport_size.y * 0.78)
-	var base_col: Color = Color(0.75, 0.82, 0.78, 0.12 * visible_alpha)
-	var ring_col: Color = Color(0.82, 0.9, 0.86, 0.28 * visible_alpha)
-	var knob_col: Color = Color(0.9, 0.95, 0.92, 0.34 * visible_alpha)
+	var base_col := Color(0.75, 0.82, 0.78, 0.12 * visible_alpha)
+	var ring_col := Color(0.82, 0.9, 0.86, 0.28 * visible_alpha)
+	var knob_col := Color(0.9, 0.95, 0.92, 0.34 * visible_alpha)
 	draw_circle(c, radius, base_col)
 	draw_arc(c, radius, 0.0, TAU, 64, ring_col, 2.0, true)
-	var knob_pos: Vector2 = c + value * radius
+	var knob_pos := c + value * radius
 	draw_circle(knob_pos, knob_radius, knob_col)
 	draw_arc(knob_pos, knob_radius, 0.0, TAU, 40, Color(1,1,1,0.4 * visible_alpha), 1.5, true)
