@@ -4,6 +4,7 @@ var _failures := PackedStringArray()
 
 func _initialize() -> void:
 	_scan_dir("res://scripts")
+	_scan_dir("res://tools")
 	if _failures.is_empty():
 		print("FAST_GDSCRIPT_VALIDATION: PASS")
 		quit(0)
