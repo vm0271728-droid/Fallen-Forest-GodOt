@@ -1,9 +1,9 @@
 extends Node3D
 
 const WORLD_SIZE := 150.0
-const TREE_COUNT := 260
-const ROCK_COUNT := 85
-const GRASS_COUNT := 850
+const TREE_COUNT := 190
+const ROCK_COUNT := 56
+const GRASS_COUNT := 480
 
 var rng := RandomNumberGenerator.new()
 var player: CharacterBody3D
@@ -26,6 +26,9 @@ var watcher_index := 0
 var watcher_cooldown := 0.0
 
 func _ready() -> void:
+	Engine.max_fps = 60
+	if OS.has_feature("mobile"):
+		DisplayServer.screen_set_orientation(DisplayServer.SCREEN_LANDSCAPE)
 	rng.seed = 73317331
 	_build_environment()
 	_build_ground()
@@ -39,31 +42,24 @@ func _ready() -> void:
 func _build_environment() -> void:
 	var world_env := WorldEnvironment.new()
 	var env := Environment.new()
+	# Darkness is intentional: the flashlight is the only practical light source.
 	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color(0.007, 0.011, 0.015)
+	env.background_color = Color(0.0, 0.0, 0.0)
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color(0.14, 0.18, 0.2)
-	env.ambient_light_energy = 0.28
+	env.ambient_light_color = Color(0.0, 0.0, 0.0)
+	env.ambient_light_energy = 0.0
 	env.reflected_light_source = Environment.REFLECTION_SOURCE_DISABLED
 	env.fog_enabled = true
-	env.fog_light_color = Color(0.17, 0.21, 0.22)
-	env.fog_light_energy = 0.45
-	env.fog_density = 0.028
+	env.fog_light_color = Color(0.0, 0.0, 0.0)
+	env.fog_light_energy = 0.0
+	env.fog_density = 0.020
 	env.fog_height = 0.0
-	env.fog_height_density = 0.085
-	env.fog_aerial_perspective = 0.72
+	env.fog_height_density = 0.050
+	env.fog_aerial_perspective = 0.35
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	env.tonemap_exposure = 1.12
+	env.tonemap_exposure = 0.90
 	world_env.environment = env
 	add_child(world_env)
-
-	var moon := DirectionalLight3D.new()
-	moon.rotation_degrees = Vector3(-58.0, -34.0, 0.0)
-	moon.light_color = Color(0.55, 0.67, 0.82)
-	moon.light_energy = 0.46
-	moon.shadow_enabled = true
-	moon.directional_shadow_max_distance = 48.0
-	add_child(moon)
 
 func _build_ground() -> void:
 	var body := StaticBody3D.new()
@@ -74,7 +70,7 @@ func _build_ground() -> void:
 	plane.subdivide_width = 96
 	plane.subdivide_depth = 96
 	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(0.095, 0.115, 0.09)
+	mat.albedo_color = Color(0.16, 0.18, 0.15)
 	mat.roughness = 0.88
 	mat.uv1_scale = Vector3(34.0, 34.0, 34.0)
 	mat.metallic = 0.0
@@ -124,7 +120,7 @@ func _build_tree_layer() -> void:
 	trunk_mesh.height = 7.2
 	trunk_mesh.radial_segments = 10
 	var trunk_mat := StandardMaterial3D.new()
-	trunk_mat.albedo_color = Color(0.19, 0.15, 0.11)
+	trunk_mat.albedo_color = Color(0.23, 0.17, 0.12)
 	trunk_mat.roughness = 0.94
 	trunk_mat.uv1_scale = Vector3(2.4, 4.5, 2.4)
 	trunk_mesh.material = trunk_mat
@@ -139,7 +135,7 @@ func _build_tree_layer() -> void:
 	crown_mesh.height = 5.5
 	crown_mesh.radial_segments = 10
 	var crown_mat := StandardMaterial3D.new()
-	crown_mat.albedo_color = Color(0.035, 0.085, 0.04)
+	crown_mat.albedo_color = Color(0.045, 0.095, 0.05)
 	crown_mat.roughness = 0.92
 	crown_mat.uv1_scale = Vector3(3.0, 3.0, 3.0)
 	crown_mesh.material = crown_mat
@@ -184,7 +180,7 @@ func _build_rocks() -> void:
 	mesh.radial_segments = 10
 	mesh.rings = 6
 	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(0.22, 0.24, 0.21)
+	mat.albedo_color = Color(0.25, 0.27, 0.24)
 	mat.roughness = 0.78
 	mat.uv1_triplanar = true
 	mat.uv1_world_triplanar = true
@@ -201,6 +197,7 @@ func _build_rocks() -> void:
 		mm.set_instance_transform(i, Transform3D(b, p))
 	var inst := MultiMeshInstance3D.new()
 	inst.multimesh = mm
+	inst.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 	add_child(inst)
 
 func _build_grass() -> void:
@@ -238,6 +235,7 @@ func _build_dead_branches() -> void:
 		mat.roughness = 0.95
 		box.material = mat
 		branch.mesh = box
+		branch.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 		branch.position = _forest_position(8.0) + Vector3(0, 0.12, 0)
 		branch.rotation = Vector3(rng.randf_range(-0.12,0.12), rng.randf_range(0.0,TAU), rng.randf_range(-0.08,0.08))
 		add_child(branch)
@@ -265,6 +263,7 @@ func _build_watcher() -> void:
 	body_mesh.radial_segments = 8
 	body_mesh.material = mat
 	body.mesh = body_mesh
+	body.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 	body.position.y = 1.25
 	watcher.add_child(body)
 
@@ -276,6 +275,7 @@ func _build_watcher() -> void:
 	head_mesh.rings = 6
 	head_mesh.material = mat
 	head.mesh = head_mesh
+	head.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 	head.position.y = 2.57
 	watcher.add_child(head)
 
@@ -312,15 +312,21 @@ func _build_player() -> void:
 	neck.add_child(camera)
 
 	flashlight = SpotLight3D.new()
-	flashlight.position = Vector3(0.11, -0.08, -0.08)
-	flashlight.rotation_degrees = Vector3(-1.5, 0, 0)
-	flashlight.light_color = Color(1.0, 0.91, 0.74)
-	flashlight.light_energy = 7.8
-	flashlight.spot_range = 31.0
-	flashlight.spot_angle = 31.0
-	flashlight.spot_angle_attenuation = 0.62
+	flashlight.position = Vector3(0.10, -0.07, -0.10)
+	flashlight.rotation_degrees = Vector3(-1.0, 0.0, 0.0)
+	flashlight.light_color = Color(1.0, 0.94, 0.84)
+	flashlight.light_energy = 9.5
+	flashlight.light_specular = 0.72
+	flashlight.light_size = 0.09
+	flashlight.spot_range = 33.0
+	flashlight.spot_attenuation = 1.25
+	flashlight.spot_angle = 28.0
+	flashlight.spot_angle_attenuation = 0.72
 	flashlight.shadow_enabled = true
-	flashlight.shadow_bias = 0.035
+	flashlight.shadow_opacity = 1.0
+	flashlight.shadow_bias = 0.025
+	flashlight.shadow_normal_bias = 0.55
+	flashlight.shadow_blur = 1.10
 	camera.add_child(flashlight)
 	add_child(player)
 
@@ -452,8 +458,8 @@ func _update_camera(delta: float, running: bool) -> void:
 	camera.rotation.y = lerp(camera.rotation.y, -move_vec.x * 0.006 + micro * 0.3, 1.0 - exp(-7.0 * delta))
 	camera.fov = lerp(camera.fov, base_fov + (4.0 if running else 0.0) * motion, 1.0 - exp(-5.0 * delta))
 	if flashlight != null and light_on:
-		var pulse: float = 1.0 + sin(Time.get_ticks_msec()*0.0024)*0.018 + sin(Time.get_ticks_msec()*0.011)*0.008
-		flashlight.light_energy = 7.8 * pulse
+		var pulse: float = 1.0 + sin(Time.get_ticks_msec()*0.0024)*0.005 + sin(Time.get_ticks_msec()*0.011)*0.002
+		flashlight.light_energy = 9.5 * pulse
 
 func _update_watcher(delta: float) -> void:
 	if watcher == null:
