@@ -1,4 +1,4 @@
-extends SceneTree
+extends Node
 
 # Isolated regression test for the historical missing floor/tree collision bug.
 const TERRAIN_SCRIPT := preload("res://scripts/world/terrain_generator.gd")
@@ -10,13 +10,13 @@ class FakeForest:
 
 var _failures := PackedStringArray()
 
-func _initialize() -> void:
+func _ready() -> void:
 	call_deferred("_run")
 
 func _run() -> void:
 	var world := Node3D.new()
 	world.name = "CollisionCoreWorld"
-	root.add_child(world)
+	add_child(world)
 
 	var terrain := StaticBody3D.new()
 	terrain.name = "Terrain"
@@ -29,9 +29,9 @@ func _run() -> void:
 	terrain.add_child(terrain_collision)
 	world.add_child(terrain)
 
-	await process_frame
-	await physics_frame
-	if not bool(terrain.get("generated")):
+	await get_tree().process_frame
+	await get_tree().physics_frame
+	if terrain.get("generated") != true:
 		_fail("Terrain generator did not complete")
 		_finish(world)
 		return
@@ -61,7 +61,7 @@ func _run() -> void:
 	player.add_child(player_shape)
 	world.add_child(player)
 
-	await physics_frame
+	await get_tree().physics_frame
 	var test_from := Transform3D(Basis.IDENTITY, Vector3(0.0, ground_y + 3.0, 0.0))
 	if not player.test_move(test_from, Vector3(0.0, -6.0, 0.0)):
 		_fail("CharacterBody3D test_move passed through the terrain")
@@ -95,11 +95,11 @@ func _run() -> void:
 	player.global_position = Vector3.ZERO
 
 	for _i in 4:
-		await physics_frame
-		await process_frame
+		await get_tree().physics_frame
+		await get_tree().process_frame
 	manager.call("refresh_collisions")
 	for _i in 3:
-		await physics_frame
+		await get_tree().physics_frame
 
 	if int(manager.get("active_trunk_count")) < 1:
 		_fail("Tree collision manager did not activate a trunk collider")
@@ -131,9 +131,9 @@ func _finish(world: Node) -> void:
 		world.queue_free()
 	if _failures.is_empty():
 		print("COLLISION_CORE_VALIDATION: PASS")
-		quit(0)
+		get_tree().quit(0)
 	else:
 		print("COLLISION_CORE_VALIDATION: FAIL (%d problems)" % _failures.size())
 		for failure: String in _failures:
 			print(" - %s" % failure)
-		quit(1)
+		get_tree().quit(1)
