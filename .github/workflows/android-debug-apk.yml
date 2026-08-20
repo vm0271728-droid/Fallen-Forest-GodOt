@@ -12,7 +12,7 @@ on:
       - ".github/workflows/android-debug-apk.yml"
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: fallen-forest-android-debug-${{ github.ref }}
@@ -21,11 +21,13 @@ concurrency:
 jobs:
   build-android-debug:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 40
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Java 17
         uses: actions/setup-java@v4
@@ -94,54 +96,169 @@ jobs:
           EOF
 
       - name: Import project before export
+        id: import
         shell: bash
         run: |
-          timeout 420s /tmp/godot/Godot_v4.7.1-stable_linux.x86_64 \
-            --headless --path . --import
+          set +e
+          GODOT=/tmp/godot/Godot_v4.7.1-stable_linux.x86_64
+          timeout 420s "$GODOT" --headless --path . --import > /tmp/android-import.log 2>&1
+          CODE=$?
+          cat /tmp/android-import.log
+          if grep -Eq 'SCRIPT ERROR:|ERROR: Condition|Failed to load script|Compilation failed|Parse Error|Compile Error' /tmp/android-import.log; then
+            CODE=1
+          fi
+          echo "code=$CODE" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Install Godot Android build template
+        id: template
+        if: steps.import.outputs.code == '0'
+        shell: bash
+        run: |
+          set +e
+          /tmp/godot/Godot_v4.7.1-stable_linux.x86_64 \
+            --headless --path . --install-android-build-template \
+            > /tmp/android-template.log 2>&1
+          CODE=$?
+          cat /tmp/android-template.log
+          test -d android/build || CODE=1
+          echo "code=$CODE" >> "$GITHUB_OUTPUT"
+          exit 0
 
       - name: Export Android 11+ debug APK with Gradle
+        id: export
+        if: steps.import.outputs.code == '0' && steps.template.outputs.code == '0'
         shell: bash
         run: |
+          set +e
           mkdir -p Builds/Android
           /tmp/godot/Godot_v4.7.1-stable_linux.x86_64 \
             --headless --path . \
-            --install-android-build-template \
-            --export-debug "Android" "Builds/Android/FallenForest-debug.apk"
-          test -s Builds/Android/FallenForest-debug.apk
-          ls -lh Builds/Android/FallenForest-debug.apk
+            --export-debug "Android" "Builds/Android/FallenForest-debug.apk" \
+            > /tmp/android-export.log 2>&1
+          CODE=$?
+          cat /tmp/android-export.log
+          test -s Builds/Android/FallenForest-debug.apk || CODE=1
+          if grep -Eq 'SCRIPT ERROR:|Failed to load script|Compilation failed|Parse Error|Compile Error|ERROR:.*export' /tmp/android-export.log; then
+            CODE=1
+          fi
+          echo "code=$CODE" >> "$GITHUB_OUTPUT"
+          exit 0
 
       - name: Verify APK manifest and ABI
+        id: verify
+        if: steps.export.outputs.code == '0'
         shell: bash
         run: |
+          set +e
           APK="Builds/Android/FallenForest-debug.apk"
           AAPT="$ANDROID_HOME/build-tools/35.0.1/aapt"
-          BADGING="$($AAPT dump badging "$APK")"
-          printf '%s\n' "$BADGING"
+          BADGING="$($AAPT dump badging "$APK" 2>&1)"
+          CODE=$?
+          printf '%s\n' "$BADGING" | tee /tmp/android-badging.log
 
           MIN_SDK="$(printf '%s\n' "$BADGING" | sed -n "s/.*sdkVersion:'\([^']*\)'.*/\1/p" | head -n1)"
           TARGET_SDK="$(printf '%s\n' "$BADGING" | sed -n "s/.*targetSdkVersion:'\([^']*\)'.*/\1/p" | head -n1)"
-          if [ "$MIN_SDK" != "30" ]; then
-            echo "Expected Android minSdk 30 (Android 11), got: $MIN_SDK" >&2
-            exit 1
-          fi
-          if [ "$TARGET_SDK" != "35" ]; then
-            echo "Expected targetSdk 35, got: $TARGET_SDK" >&2
-            exit 1
+          [ "$MIN_SDK" = "30" ] || CODE=1
+          [ "$TARGET_SDK" = "35" ] || CODE=1
+          unzip -Z1 "$APK" | grep -q '^lib/arm64-v8a/' || CODE=1
+          if unzip -Z1 "$APK" | grep -Eq '^lib/(armeabi-v7a|x86|x86_64)/'; then
+            CODE=1
           fi
 
-          unzip -Z1 "$APK" | grep -q '^lib/arm64-v8a/' || {
-            echo "arm64-v8a native libraries are missing from APK" >&2
-            exit 1
-          }
-          if unzip -Z1 "$APK" | grep -Eq '^lib/(armeabi-v7a|x86|x86_64)/'; then
-            echo "APK unexpectedly contains a non-arm64 ABI" >&2
-            exit 1
-          fi
+          echo "min_sdk=$MIN_SDK" >> "$GITHUB_OUTPUT"
+          echo "target_sdk=$TARGET_SDK" >> "$GITHUB_OUTPUT"
+          echo "code=$CODE" >> "$GITHUB_OUTPUT"
+          exit 0
 
       - name: Upload APK
+        if: steps.verify.outputs.code == '0'
         uses: actions/upload-artifact@v4
         with:
           name: FallenForest-Android11plus-debug
           path: Builds/Android/FallenForest-debug.apk
           if-no-files-found: error
           retention-days: 14
+
+      - name: Record Android validation result
+        if: always()
+        shell: bash
+        run: |
+          IMPORT_CODE='${{ steps.import.outputs.code }}'
+          TEMPLATE_CODE='${{ steps.template.outputs.code }}'
+          EXPORT_CODE='${{ steps.export.outputs.code }}'
+          VERIFY_CODE='${{ steps.verify.outputs.code }}'
+          MIN_SDK='${{ steps.verify.outputs.min_sdk }}'
+          TARGET_SDK='${{ steps.verify.outputs.target_sdk }}'
+          if [ -z "$IMPORT_CODE" ]; then IMPORT_CODE=999; fi
+          if [ -z "$TEMPLATE_CODE" ]; then TEMPLATE_CODE=999; fi
+          if [ -z "$EXPORT_CODE" ]; then EXPORT_CODE=999; fi
+          if [ -z "$VERIFY_CODE" ]; then VERIFY_CODE=999; fi
+          OVERALL=0
+          for CODE in "$IMPORT_CODE" "$TEMPLATE_CODE" "$EXPORT_CODE" "$VERIFY_CODE"; do
+            if [ "$CODE" != "0" ]; then OVERALL=1; fi
+          done
+
+          mkdir -p docs
+          {
+            echo '# Android APK validation status'
+            echo
+            echo '- Engine: Godot 4.7.1 stable'
+            echo "- Branch: \`$GITHUB_REF_NAME\`"
+            echo "- Tested commit: \`$GITHUB_SHA\`"
+            echo '- Required minimum: Android 11 / API 30'
+            echo '- Required ABI: arm64-v8a only'
+            echo "- Import exit code: \`$IMPORT_CODE\`"
+            echo "- Android template exit code: \`$TEMPLATE_CODE\`"
+            echo "- Export exit code: \`$EXPORT_CODE\`"
+            echo "- Manifest/ABI verification exit code: \`$VERIFY_CODE\`"
+            echo "- APK minSdk: \`${MIN_SDK:-unknown}\`"
+            echo "- APK targetSdk: \`${TARGET_SDK:-unknown}\`"
+            if [ "$OVERALL" = "0" ]; then
+              echo '- Result: **PASS**'
+            else
+              echo '- Result: **FAIL**'
+            fi
+            echo
+            echo '## Import log tail'
+            echo '```text'
+            tail -n 100 /tmp/android-import.log 2>/dev/null || true
+            echo '```'
+            echo
+            echo '## Template log tail'
+            echo '```text'
+            tail -n 80 /tmp/android-template.log 2>/dev/null || true
+            echo '```'
+            echo
+            echo '## Export log tail'
+            echo '```text'
+            tail -n 120 /tmp/android-export.log 2>/dev/null || true
+            echo '```'
+            echo
+            echo '## APK badging'
+            echo '```text'
+            cat /tmp/android-badging.log 2>/dev/null || true
+            echo '```'
+          } > docs/ANDROID_BUILD_VALIDATION.md
+
+          git config user.name "Fallen Forest Android Validator"
+          git config user.email "actions@users.noreply.github.com"
+          git add docs/ANDROID_BUILD_VALIDATION.md
+          if ! git diff --cached --quiet; then
+            git pull --rebase origin "$GITHUB_REF_NAME" || true
+            git add docs/ANDROID_BUILD_VALIDATION.md
+            git commit -m "Record Android validation for $GITHUB_SHA"
+            git push origin HEAD:"$GITHUB_REF_NAME" || true
+          fi
+
+      - name: Enforce Android validation result
+        if: always()
+        shell: bash
+        run: |
+          IMPORT_CODE='${{ steps.import.outputs.code }}'
+          TEMPLATE_CODE='${{ steps.template.outputs.code }}'
+          EXPORT_CODE='${{ steps.export.outputs.code }}'
+          VERIFY_CODE='${{ steps.verify.outputs.code }}'
+          if [ "$IMPORT_CODE" != "0" ] || [ "$TEMPLATE_CODE" != "0" ] || [ "$EXPORT_CODE" != "0" ] || [ "$VERIFY_CODE" != "0" ]; then
+            exit 1
+          fi
