@@ -434,25 +434,25 @@ func _physics_process(delta: float) -> void:
 
 func _update_camera(delta: float, running: bool) -> void:
 	yaw -= look_accum.x
-	pitch = clamp(pitch - look_accum.y, deg_to_rad(-78.0), deg_to_rad(78.0))
+	pitch = clampf(pitch - look_accum.y, deg_to_rad(-78.0), deg_to_rad(78.0))
 	look_accum = look_accum.lerp(Vector2.ZERO, 1.0 - exp(-18.0 * delta))
 	player.rotation.y = lerp_angle(player.rotation.y, yaw, 1.0 - exp(-20.0 * delta))
 	neck.rotation.x = lerp_angle(neck.rotation.x, pitch, 1.0 - exp(-18.0 * delta))
 
-	var planar_speed := Vector2(player.velocity.x, player.velocity.z).length()
-	var motion := clamp(planar_speed / 5.2, 0.0, 1.0)
+	var planar_speed: float = Vector2(player.velocity.x, player.velocity.z).length()
+	var motion: float = clampf(planar_speed / 5.2, 0.0, 1.0)
 	bob_time += delta * lerpf(3.2, 9.0 if running else 7.0, motion)
-	var bob_y := sin(bob_time * 2.0) * 0.020 * motion
-	var bob_x := cos(bob_time) * 0.016 * motion
-	var breath := sin(Time.get_ticks_msec() * 0.00125) * 0.006
-	var micro := sin(Time.get_ticks_msec() * 0.0061) * 0.0022 + sin(Time.get_ticks_msec() * 0.0107) * 0.0011
+	var bob_y: float = sin(bob_time * 2.0) * 0.020 * motion
+	var bob_x: float = cos(bob_time) * 0.016 * motion
+	var breath: float = sin(Time.get_ticks_msec() * 0.00125) * 0.006
+	var micro: float = sin(Time.get_ticks_msec() * 0.0061) * 0.0022 + sin(Time.get_ticks_msec() * 0.0107) * 0.0011
 	camera.position = camera.position.lerp(Vector3(bob_x + micro, bob_y + breath, 0.0), 1.0 - exp(-12.0 * delta))
-	var target_roll := -move_vec.x * 0.020 - bob_x * 0.7
+	var target_roll: float = -move_vec.x * 0.020 - bob_x * 0.7
 	camera.rotation.z = lerp(camera.rotation.z, target_roll, 1.0 - exp(-8.0 * delta))
 	camera.rotation.y = lerp(camera.rotation.y, -move_vec.x * 0.006 + micro * 0.3, 1.0 - exp(-7.0 * delta))
 	camera.fov = lerp(camera.fov, base_fov + (4.0 if running else 0.0) * motion, 1.0 - exp(-5.0 * delta))
 	if flashlight != null and light_on:
-		var pulse := 1.0 + sin(Time.get_ticks_msec()*0.0024)*0.018 + sin(Time.get_ticks_msec()*0.011)*0.008
+		var pulse: float = 1.0 + sin(Time.get_ticks_msec()*0.0024)*0.018 + sin(Time.get_ticks_msec()*0.011)*0.008
 		flashlight.light_energy = 7.8 * pulse
 
 func _update_watcher(delta: float) -> void:
