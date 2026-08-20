@@ -98,7 +98,8 @@ func _play_pickup(roadside: Vector3, tangent: Vector3) -> void:
 	start.y = roadside.y + 0.04
 	finish.y = roadside.y + 0.04
 	vehicle.global_position = start
-	vehicle.rotation.y = atan2(tangent.x, tangent.z)
+	# Vehicle forward is -Z; use the same yaw convention as cinematic_pickup.gd.
+	vehicle.rotation.y = atan2(-tangent.x, -tangent.z)
 	if vehicle.has_method("start_drive"):
 		vehicle.call("start_drive", [finish])
 	await get_tree().create_timer(vehicle_moment_time).timeout
