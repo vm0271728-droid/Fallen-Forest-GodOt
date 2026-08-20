@@ -4,14 +4,16 @@ class_name BoiledAI
 signal event_started
 
 # Fallen Forest - Boiled One T3 behaviour
+# Observe -> Gaze Event -> Vanish
 
 var watching := false
 var gaze_time := 0.0
+var active_event := false
 
 @export var trigger_time := 5.0
 
-func check_visibility(player_camera: Camera3D, blocked: bool, delta: float):
-	if blocked:
+func check_visibility(player_visible: bool, blocked: bool, delta: float):
+	if blocked or not player_visible:
 		gaze_time = 0.0
 		watching = false
 		return
@@ -19,17 +21,22 @@ func check_visibility(player_camera: Camera3D, blocked: bool, delta: float):
 	watching = true
 	gaze_time += delta
 
-	if gaze_time >= trigger_time:
+	if gaze_time >= trigger_time and not active_event:
 		start_gaze_event()
 
 func start_gaze_event():
+	active_event = true
 	event_started.emit()
+
+func vanish():
+	active_event = false
 	gaze_time = 0.0
+	watching = false
 
 # T3:
-# - activates only through real line of sight
-# - vegetation and objects can block detection
-# - camera focus event
-# - player slowdown
-# - tinnitus / environment suppression
-# - disappear during eye closing moment
+# - real LOS only
+# - trees, grass and objects block detection
+# - camera fixation
+# - movement slowdown
+# - tinnitus and environment suppression
+# - disappear exactly during eye closing moment
