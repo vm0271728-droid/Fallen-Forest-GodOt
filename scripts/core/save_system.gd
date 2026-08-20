@@ -4,6 +4,7 @@ const SAVE_PATH := "user://run_save.json"
 
 var last_player_position := Vector3.ZERO
 var has_player_position := false
+var _force_new_run_pending := false
 
 func begin_new_run() -> void:
 	var rng := RandomNumberGenerator.new()
@@ -13,8 +14,23 @@ func begin_new_run() -> void:
 	has_player_position = false
 	save_run()
 
+func request_new_run() -> void:
+	# Keep an in-memory intent flag as a safety net. Even if Android storage
+	# refuses to delete an old file, Main must never reinterpret NEW GAME as
+	# CONTINUE during this app session.
+	_force_new_run_pending = true
+	delete_run()
+
+func consume_new_run_request() -> bool:
+	var requested := _force_new_run_pending
+	_force_new_run_pending = false
+	return requested
+
 func has_run() -> bool:
 	return FileAccess.file_exists(SAVE_PATH)
+
+func has_valid_run() -> bool:
+	return not _read_valid_save_data().is_empty()
 
 func save_player_position(position: Vector3) -> void:
 	last_player_position = position
@@ -51,25 +67,8 @@ func save_run() -> void:
 	file.close()
 
 func load_run() -> Dictionary:
-	if not has_run():
-		return {}
-	var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
-	if file == null:
-		push_warning("Fallen Forest: save file exists but cannot be opened.")
-		return {}
-	var text := file.get_as_text()
-	file.close()
-	var parsed = JSON.parse_string(text)
-	if typeof(parsed) != TYPE_DICTIONARY:
-		push_warning("Fallen Forest: save file is invalid and will be replaced by a new run.")
-		return {}
-
-	var data: Dictionary = parsed
-	if int(data.get("version", 0)) != 1:
-		push_warning("Fallen Forest: unsupported save version; starting a fresh run.")
-		return {}
-	if not data.has("run_seed") or int(data.get("run_seed", 0)) <= 0:
-		push_warning("Fallen Forest: save has no valid run seed; starting a fresh run.")
+	var data := _read_valid_save_data()
+	if data.is_empty():
 		return {}
 
 	GameState.restore(data)
@@ -84,6 +83,29 @@ func load_run() -> Dictionary:
 	else:
 		has_player_position = false
 		last_player_position = Vector3.ZERO
+	return data
+
+func _read_valid_save_data() -> Dictionary:
+	if not has_run():
+		return {}
+	var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
+	if file == null:
+		push_warning("Fallen Forest: save file exists but cannot be opened.")
+		return {}
+	var text := file.get_as_text()
+	file.close()
+	var parsed = JSON.parse_string(text)
+	if typeof(parsed) != TYPE_DICTIONARY:
+		push_warning("Fallen Forest: save file is invalid and cannot be continued.")
+		return {}
+
+	var data: Dictionary = parsed
+	if int(data.get("version", 0)) != 1:
+		push_warning("Fallen Forest: unsupported save version; it cannot be continued.")
+		return {}
+	if not data.has("run_seed") or int(data.get("run_seed", 0)) <= 0:
+		push_warning("Fallen Forest: save has no valid run seed; it cannot be continued.")
+		return {}
 	return data
 
 func delete_run() -> void:
