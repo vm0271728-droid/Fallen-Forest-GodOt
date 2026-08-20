@@ -119,7 +119,7 @@ jobs:
           exit 0
 
       - name: Record validation result
-        if: always() && github.ref == 'refs/heads/main'
+        if: always()
         shell: bash
         run: |
           CODE='${{ steps.validation.outputs.code }}'
@@ -140,6 +140,7 @@ jobs:
             echo '# Godot validation status'
             echo
             echo '- Engine: Godot 4.7.1 stable'
+            echo "- Branch: \`$GITHUB_REF_NAME\`"
             echo "- Tested commit: \`$TESTED_SHA\`"
             echo "- Full asset import exit code: \`$IMPORT_CODE\`"
             echo "- Main-menu smoke-test exit code: \`$MENU_CODE\`"
@@ -189,11 +190,11 @@ jobs:
           git add docs/GODOT_VALIDATION.md
           if [ -f docs/ASSET_IMPORT_REPORT.md ]; then git add docs/ASSET_IMPORT_REPORT.md; fi
           if ! git diff --cached --quiet; then
-            git pull --rebase origin main || true
+            git pull --rebase origin "$GITHUB_REF_NAME" || true
             git add docs/GODOT_VALIDATION.md
             if [ -f docs/ASSET_IMPORT_REPORT.md ]; then git add docs/ASSET_IMPORT_REPORT.md; fi
             git commit -m "Record Godot validation for $TESTED_SHA"
-            git push origin HEAD:main || true
+            git push origin HEAD:"$GITHUB_REF_NAME" || true
           fi
 
       - name: Enforce validation result
