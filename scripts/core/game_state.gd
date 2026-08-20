@@ -5,6 +5,7 @@ signal document_collected(slot: int)
 signal final_run_started
 signal boiled_encounter_consumed
 signal boiled_influence_changed(active: bool)
+signal flashlight_changed(acquired: bool)
 
 const REQUIRED_DOCUMENTS := 10
 
@@ -13,6 +14,7 @@ var documents_collected: int = 0
 var document_mask: int = 0
 var boiled_encounter_used: bool = false
 var boiled_influenced: bool = false
+var flashlight_acquired: bool = false
 var final_run_active: bool = false
 
 func begin_new_run(seed: int) -> void:
@@ -21,9 +23,11 @@ func begin_new_run(seed: int) -> void:
 	document_mask = 0
 	boiled_encounter_used = false
 	boiled_influenced = false
+	flashlight_acquired = false
 	final_run_active = false
 	documents_changed.emit(documents_collected, REQUIRED_DOCUMENTS)
 	boiled_influence_changed.emit(false)
+	flashlight_changed.emit(false)
 
 func is_document_collected(slot: int) -> bool:
 	if slot < 0 or slot >= REQUIRED_DOCUMENTS:
@@ -56,12 +60,20 @@ func mark_boiled_influenced() -> void:
 	boiled_influenced = true
 	boiled_influence_changed.emit(true)
 
+func acquire_flashlight() -> void:
+	if flashlight_acquired:
+		return
+	flashlight_acquired = true
+	flashlight_changed.emit(true)
+
 func restore(data: Dictionary) -> void:
 	run_seed = int(data.get("run_seed", 0))
 	document_mask = int(data.get("document_mask", 0))
 	documents_collected = clampi(int(data.get("documents_collected", 0)), 0, REQUIRED_DOCUMENTS)
 	boiled_encounter_used = bool(data.get("boiled_encounter_used", false))
 	boiled_influenced = bool(data.get("boiled_influenced", false))
+	flashlight_acquired = bool(data.get("flashlight_acquired", false))
 	final_run_active = bool(data.get("final_run_active", documents_collected >= REQUIRED_DOCUMENTS))
 	documents_changed.emit(documents_collected, REQUIRED_DOCUMENTS)
 	boiled_influence_changed.emit(boiled_influenced)
+	flashlight_changed.emit(flashlight_acquired)
