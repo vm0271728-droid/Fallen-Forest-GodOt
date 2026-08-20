@@ -22,6 +22,13 @@ scale = Vector3(1.38, 1.38, 1.38)
 [node name="RigAnimator" type="Node" parent="."]
 script = ExtResource("3_animator")
 
+[node name="NavigationAgent3D" type="NavigationAgent3D" parent="."]
+path_desired_distance = 0.7
+target_desired_distance = 0.9
+radius = 0.52
+height = 4.05
+avoidance_enabled = false
+
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 position = Vector3(0, 2.025, 0)
 shape = SubResource("Capsule_body")

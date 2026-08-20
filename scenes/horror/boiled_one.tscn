@@ -1,7 +1,8 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/horror/boiled_one.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://assets/characters/boiled_one/source/BoiledOne.fbx" id="2_model"]
+[ext_resource type="Script" path="res://scripts/horror/boiled_animator.gd" id="3_animator"]
 
 [sub_resource type="CapsuleShape3D" id="Capsule_body"]
 radius = 0.48
@@ -15,6 +16,9 @@ position = Vector3(0, 0.06, 0)
 scale = Vector3(1.37, 1.37, 1.37)
 
 [node name="CanonicalModel" parent="Visual" instance=ExtResource("2_model")]
+
+[node name="BoiledAnimator" type="Node" parent="."]
+script = ExtResource("3_animator")
 
 [node name="Body" type="StaticBody3D" parent="."]
 collision_layer = 4
