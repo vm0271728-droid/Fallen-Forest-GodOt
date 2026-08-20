@@ -20,7 +20,7 @@ func _ready() -> void:
 		call_deferred("_show_startup_warning")
 
 func _apply_language() -> void:
-	var ru := str(Settings.get("language")) == "ru"
+	var ru := Settings.language == "ru"
 	title_label.text = "FALLEN FOREST"
 	new_game_button.text = "НОВАЯ ИГРА" if ru else "NEW GAME"
 	continue_button.text = "ПРОДОЛЖИТЬ" if ru else "CONTINUE"
@@ -29,7 +29,7 @@ func _apply_language() -> void:
 	quit_button.text = "ВЫХОД" if ru else "QUIT"
 
 func _show_startup_warning() -> void:
-	var ru := str(Settings.get("language")) == "ru"
+	var ru := Settings.language == "ru"
 	var body := (
 		"Игра содержит скримеры, резкие громкие звуки, мигающие изображения и сцены, которые могут быть нежелательны при фоточувствительной эпилепсии.\n\nРекомендуются наушники."
 		if ru else
@@ -39,7 +39,7 @@ func _show_startup_warning() -> void:
 	_show_modal("ПРЕДУПРЕЖДЕНИЕ" if ru else "WARNING", body, accept)
 
 func _show_settings() -> void:
-	var ru := str(Settings.get("language")) == "ru"
+	var ru := Settings.language == "ru"
 	var overlay := _new_overlay("SettingsOverlay")
 	var panel := _new_panel(overlay, Vector2(520, 430))
 	var box := VBoxContainer.new()
@@ -59,10 +59,9 @@ func _show_settings() -> void:
 	sensitivity.min_value = 0.30
 	sensitivity.max_value = 2.50
 	sensitivity.step = 0.05
-	sensitivity.value = float(Settings.get("sensitivity"))
+	sensitivity.value = Settings.sensitivity
 	sensitivity.value_changed.connect(func(value: float):
-		Settings.set("sensitivity", value)
-		_persist_settings()
+		Settings.set_sensitivity(value)
 	)
 	box.add_child(sensitivity)
 
@@ -73,20 +72,17 @@ func _show_settings() -> void:
 	shake.min_value = 0.0
 	shake.max_value = 1.0
 	shake.step = 0.05
-	var current_shake = Settings.get("camera_shake")
-	shake.value = float(current_shake) if current_shake != null else 0.70
+	shake.value = Settings.camera_shake
 	shake.value_changed.connect(func(value: float):
-		Settings.set("camera_shake", value)
-		_persist_settings()
+		Settings.set_camera_shake(value)
 	)
 	box.add_child(shake)
 
 	var language := Button.new()
 	language.text = ("Язык: Русский" if ru else "Language: English")
 	language.pressed.connect(func():
-		var next := "en" if str(Settings.get("language")) == "ru" else "ru"
-		Settings.set("language", next)
-		_persist_settings()
+		var next := "en" if Settings.language == "ru" else "ru"
+		Settings.set_language(next)
 		overlay.queue_free()
 		_apply_language()
 		_show_settings()
@@ -105,7 +101,7 @@ func _show_settings() -> void:
 	box.add_child(close)
 
 func _show_credits() -> void:
-	var ru := str(Settings.get("language")) == "ru"
+	var ru := Settings.language == "ru"
 	var text := (
 		"Идея: Meric23\nРеализовал: Meric23\n\nНекоммерческий фанатский проект.\nМодели существ: Doctor Nowhere / соответствующие авторы исходных ассетов.\nПолные лицензии и атрибуции хранятся вместе с проектом."
 		if ru else
@@ -157,9 +153,3 @@ func _new_panel(overlay: Control, size: Vector2) -> PanelContainer:
 	panel.add_theme_constant_override("margin_bottom", 24)
 	overlay.add_child(panel)
 	return panel
-
-func _persist_settings() -> void:
-	for method_name: String in ["save_settings", "save", "persist"]:
-		if Settings.has_method(method_name):
-			Settings.call(method_name)
-			return
