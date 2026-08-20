@@ -37,6 +37,7 @@ func save_run() -> void:
 		"document_mask": GameState.document_mask,
 		"boiled_encounter_used": GameState.boiled_encounter_used,
 		"boiled_influenced": GameState.boiled_influenced,
+		"flashlight_acquired": GameState.flashlight_acquired,
 		"final_run_active": GameState.final_run_active,
 		"has_player_position": has_player_position,
 		"player_position": [last_player_position.x, last_player_position.y, last_player_position.z],
@@ -46,6 +47,7 @@ func save_run() -> void:
 		push_error("Fallen Forest: unable to open save file for writing.")
 		return
 	file.store_string(JSON.stringify(payload))
+	file.close()
 
 func load_run() -> Dictionary:
 	if not has_run():
@@ -54,6 +56,7 @@ func load_run() -> Dictionary:
 	if file == null:
 		return {}
 	var parsed = JSON.parse_string(file.get_as_text())
+	file.close()
 	if typeof(parsed) != TYPE_DICTIONARY:
 		push_warning("Fallen Forest: save file is invalid; starting fresh is recommended.")
 		return {}
