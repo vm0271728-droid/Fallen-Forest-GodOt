@@ -1,5 +1,7 @@
 extends Node
 
+signal death_choice_selected(choice: String)
+
 const FRONT_SCREAMER_PATH := "res://assets/audio/screamers/jakes-screamer.mp3"
 const REAR_SCREAMER_PATH := "res://assets/audio/screamers/the-screamer-shared-between-mallie-and-jenny.mp3"
 
@@ -10,6 +12,8 @@ var _overlay: CanvasLayer
 var _red: ColorRect
 var _black: ColorRect
 var _audio: AudioStreamPlayer
+var _death_menu: Control
+var _choice_locked := false
 
 func play_and_recover(player: CharacterBody3D, locust: Node3D, terrain: Node) -> void:
 	if player == null or locust == null:
@@ -51,9 +55,18 @@ func play_and_recover(player: CharacterBody3D, locust: Node3D, terrain: Node) ->
 	fade.tween_property(_black, "color:a", 1.0, black_fade_time).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	fade.tween_property(_red, "color:a", 0.05, black_fade_time)
 	await fade.finished
-	await get_tree().create_timer(0.24).timeout
+	await get_tree().create_timer(0.18).timeout
 
-	if SaveSystem.has_run():
+	_show_death_menu()
+	var choice: String = await death_choice_selected
+	_hide_death_menu()
+
+	if choice == "main_menu":
+		SceneFlow.go_to_main_menu()
+		return
+
+	# CONTINUE restores the last committed run while the screen stays black.
+	if SaveSystem.has_valid_run():
 		SaveSystem.load_run()
 	if SaveSystem.has_player_position:
 		player.teleport_to(SaveSystem.last_player_position)
@@ -75,7 +88,8 @@ func play_and_recover(player: CharacterBody3D, locust: Node3D, terrain: Node) ->
 	var recover := create_tween()
 	recover.tween_property(_black, "color:a", 0.0, 0.38).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	await recover.finished
-	_overlay.queue_free()
+	if is_instance_valid(_overlay):
+		_overlay.queue_free()
 
 func _is_front_attack(player: Node3D, locust: Node3D) -> bool:
 	var to_locust := locust.global_position - player.global_position
@@ -160,4 +174,58 @@ func _build_overlay() -> void:
 	_black.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_black.color = Color(0.0, 0.0, 0.0, 0.0)
 	_overlay.add_child(_black)
+	_build_death_menu()
 	get_tree().root.add_child(_overlay)
+
+func _build_death_menu() -> void:
+	_death_menu = Control.new()
+	_death_menu.name = "DeathMenu"
+	_death_menu.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_death_menu.mouse_filter = Control.MOUSE_FILTER_STOP
+	_death_menu.visible = false
+	_overlay.add_child(_death_menu)
+
+	var panel := VBoxContainer.new()
+	panel.name = "DeathMenuLayout"
+	panel.set_anchors_preset(Control.PRESET_CENTER)
+	panel.position = Vector2(-230.0, -150.0)
+	panel.size = Vector2(460.0, 300.0)
+	panel.add_theme_constant_override("separation", 18)
+	_death_menu.add_child(panel)
+
+	var title := Label.new()
+	title.text = "ТЫ ПОГИБ" if Settings.language == "ru" else "YOU DIED"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 42)
+	panel.add_child(title)
+
+	var spacer := Control.new()
+	spacer.custom_minimum_size = Vector2(0.0, 26.0)
+	panel.add_child(spacer)
+
+	var continue_button := Button.new()
+	continue_button.text = "ПРОДОЛЖИТЬ" if Settings.language == "ru" else "CONTINUE"
+	continue_button.custom_minimum_size = Vector2(0.0, 58.0)
+	continue_button.pressed.connect(_select_death_choice.bind("continue"))
+	panel.add_child(continue_button)
+
+	var menu_button := Button.new()
+	menu_button.text = "ГЛАВНОЕ МЕНЮ" if Settings.language == "ru" else "MAIN MENU"
+	menu_button.custom_minimum_size = Vector2(0.0, 58.0)
+	menu_button.pressed.connect(_select_death_choice.bind("main_menu"))
+	panel.add_child(menu_button)
+
+func _show_death_menu() -> void:
+	_choice_locked = false
+	if is_instance_valid(_death_menu):
+		_death_menu.visible = true
+
+func _hide_death_menu() -> void:
+	if is_instance_valid(_death_menu):
+		_death_menu.visible = false
+
+func _select_death_choice(choice: String) -> void:
+	if _choice_locked:
+		return
+	_choice_locked = true
+	death_choice_selected.emit(choice)
