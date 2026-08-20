@@ -53,22 +53,17 @@ jobs:
             --script res://tools/fast_validate_scripts.gd \
             > /tmp/ff-fast-validate.log 2>&1
           CODE=$?
-
-          if grep -Eq 'SCRIPT ERROR: (Parse|Compile) Error|Failed to load script|Compilation failed|Parse Error|Compile Error' /tmp/ff-fast-validate.log; then
-            CODE=1
-          fi
-
+          if grep -Eq 'SCRIPT ERROR: (Parse|Compile) Error|Failed to load script|Compilation failed|Parse Error|Compile Error' /tmp/ff-fast-validate.log; then CODE=1; fi
           cat /tmp/ff-fast-validate.log
           echo "code=$CODE" >> "$GITHUB_OUTPUT"
           exit 0
 
-      - name: Record fast validation result
+      - name: Build fast validation report
         if: always()
         shell: bash
         run: |
           CODE='${{ steps.compile.outputs.code }}'
           if [ -z "$CODE" ]; then CODE=999; fi
-          mkdir -p docs
           {
             echo '# Fast Godot script validation'
             echo
@@ -76,26 +71,31 @@ jobs:
             echo "- Branch: \`$GITHUB_REF_NAME\`"
             echo "- Tested commit: \`$GITHUB_SHA\`"
             echo "- Exit code: \`$CODE\`"
-            if [ "$CODE" = "0" ]; then
-              echo '- Result: **PASS**'
-            else
-              echo '- Result: **FAIL**'
-            fi
+            if [ "$CODE" = "0" ]; then echo '- Result: **PASS**'; else echo '- Result: **FAIL**'; fi
             echo
             echo '```text'
             tail -n 200 /tmp/ff-fast-validate.log 2>/dev/null || true
             echo '```'
-          } > docs/GODOT_FAST_VALIDATION.md
+          } > /tmp/GODOT_FAST_VALIDATION.md
 
+      - name: Publish fast validation report safely
+        if: always()
+        shell: bash
+        run: |
           git config user.name "Fallen Forest Fast Validator"
           git config user.email "actions@users.noreply.github.com"
-          git add docs/GODOT_FAST_VALIDATION.md
-          if ! git diff --cached --quiet; then
-            git pull --rebase origin "$GITHUB_REF_NAME" || true
+          PUBLISHED=0
+          for ATTEMPT in 1 2 3; do
+            git fetch origin "$GITHUB_REF_NAME"
+            git reset --hard "origin/$GITHUB_REF_NAME"
+            mkdir -p docs
+            cp /tmp/GODOT_FAST_VALIDATION.md docs/GODOT_FAST_VALIDATION.md
             git add docs/GODOT_FAST_VALIDATION.md
+            if git diff --cached --quiet; then PUBLISHED=1; break; fi
             git commit -m "Record fast Godot validation for $GITHUB_SHA"
-            git push origin HEAD:"$GITHUB_REF_NAME" || true
-          fi
+            if git push origin HEAD:"$GITHUB_REF_NAME"; then PUBLISHED=1; break; fi
+          done
+          if [ "$PUBLISHED" != "1" ]; then echo "Unable to publish fast validation report after retries." >&2; fi
 
       - name: Enforce validation result
         if: always()
@@ -103,6 +103,4 @@ jobs:
         run: |
           CODE='${{ steps.compile.outputs.code }}'
           if [ -z "$CODE" ]; then CODE=999; fi
-          if [ "$CODE" != "0" ]; then
-            exit "$CODE"
-          fi
+          if [ "$CODE" != "0" ]; then exit "$CODE"; fi
