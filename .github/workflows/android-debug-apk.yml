@@ -170,7 +170,7 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-      - name: Record Android validation result
+      - name: Build Android validation report
         if: always()
         shell: bash
         run: |
@@ -187,7 +187,6 @@ jobs:
             if [ "$CODE" != "0" ]; then OVERALL=1; fi
           done
 
-          mkdir -p docs
           {
             echo '# Android APK validation status'
             echo
@@ -201,11 +200,7 @@ jobs:
             echo "- Manifest/ABI verification exit code: \`$VERIFY_CODE\`"
             echo "- APK minSdk: \`${MIN_SDK:-unknown}\`"
             echo "- APK targetSdk: \`${TARGET_SDK:-unknown}\`"
-            if [ "$OVERALL" = "0" ]; then
-              echo '- Result: **PASS**'
-            else
-              echo '- Result: **FAIL**'
-            fi
+            if [ "$OVERALL" = "0" ]; then echo '- Result: **PASS**'; else echo '- Result: **FAIL**'; fi
             echo
             echo '## Import log tail'
             echo '```text'
@@ -221,17 +216,26 @@ jobs:
             echo '```text'
             cat /tmp/android-badging.log 2>/dev/null || true
             echo '```'
-          } > docs/ANDROID_BUILD_VALIDATION.md
+          } > /tmp/ANDROID_BUILD_VALIDATION.md
 
+      - name: Publish Android validation report safely
+        if: always()
+        shell: bash
+        run: |
           git config user.name "Fallen Forest Android Validator"
           git config user.email "actions@users.noreply.github.com"
-          git add docs/ANDROID_BUILD_VALIDATION.md
-          if ! git diff --cached --quiet; then
-            git pull --rebase origin "$GITHUB_REF_NAME" || true
+          PUBLISHED=0
+          for ATTEMPT in 1 2 3; do
+            git fetch origin "$GITHUB_REF_NAME"
+            git reset --hard "origin/$GITHUB_REF_NAME"
+            mkdir -p docs
+            cp /tmp/ANDROID_BUILD_VALIDATION.md docs/ANDROID_BUILD_VALIDATION.md
             git add docs/ANDROID_BUILD_VALIDATION.md
+            if git diff --cached --quiet; then PUBLISHED=1; break; fi
             git commit -m "Record Android validation for $GITHUB_SHA"
-            git push origin HEAD:"$GITHUB_REF_NAME" || true
-          fi
+            if git push origin HEAD:"$GITHUB_REF_NAME"; then PUBLISHED=1; break; fi
+          done
+          if [ "$PUBLISHED" != "1" ]; then echo "Unable to publish Android validation report after retries." >&2; fi
 
       - name: Enforce Android validation result
         if: always()
