@@ -11,16 +11,31 @@ from import_drive_assets import split_sequential_obj_objects
 
 ROOT = Path(__file__).resolve().parents[1]
 DEAD_FIRS = ROOT / "assets/environment/trees/dead_firs"
+DEAD_FIR_ARCHIVE = DEAD_FIRS / "source_archive"
 LOW_POLY = ROOT / "assets/environment/trees/low_poly_pack"
 FBX_DEPENDENCIES = ("ROCKS_AO.png", "ROCKS_DIFFUSE.png", "ROCKS_NORMALtest.png", "ROCKS_ROUGHNESS.png")
 
 
 def expand_dead_firs() -> None:
-    source = DEAD_FIRS / "firs.obj"
+    root_source = DEAD_FIRS / "firs.obj"
+    archived_source = DEAD_FIR_ARCHIVE / "firs.obj"
+    source = archived_source if archived_source.exists() else root_source
     if not source.exists():
         raise RuntimeError(f"Missing canonical dead-fir source: {source}")
+
     names = split_sequential_obj_objects(source, DEAD_FIRS / "variants")
     print("Dead fir variants:", ", ".join(names))
+
+    # The 15 MB canonical OBJ contains all four trees and far more material
+    # sections than Godot permits in one imported mesh. It is source material,
+    # not a runtime resource. Preserve it byte-for-byte in a .gdignore archive.
+    DEAD_FIR_ARCHIVE.mkdir(parents=True, exist_ok=True)
+    (DEAD_FIR_ARCHIVE / ".gdignore").write_text(
+        "# Canonical multi-tree source; use generated ../variants/fir_*.obj at runtime.\n",
+        encoding="utf-8",
+    )
+    if root_source.exists():
+        shutil.move(str(root_source), str(archived_source))
 
 
 def _restore_blob_from_history(relative_path: str, destination: Path) -> None:
@@ -69,12 +84,8 @@ def expand_low_poly() -> None:
     elif not (source_dir / "Tree_Pack.fbx").exists():
         raise RuntimeError(f"Missing low-poly tree pack source: {source_dir}")
 
-    # The canonical FBX still references the original rock textures even though
-    # all rock meshes are excluded by runtime filtering. Keep those PNGs beside
-    # the FBX solely so Godot can import the file without broken dependencies.
     restore_low_poly_fbx_dependencies()
 
-    # Rock/ground payload remains excluded from the runtime texture folder.
     texture_dir = LOW_POLY / "textures"
     for path in texture_dir.iterdir() if texture_dir.exists() else []:
         lower = path.name.lower()
