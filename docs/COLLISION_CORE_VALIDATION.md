@@ -3,16 +3,22 @@
 - Engine: Godot 4.7.1 stable
 - Branch: `fix/android11-integrity`
 <<<<<<< HEAD
+<<<<<<< HEAD
 - Tested commit: `a21f6a992420979f712bb3abed36ce338c1e0562`
 - Exit code: `1`
 =======
 - Tested commit: `e4cf07198f693b06fb248dd95592530c8a577407`
 - Exit code: `999`
 >>>>>>> 35b58dc (Record collision validation for e4cf07198f693b06fb248dd95592530c8a577407)
+=======
+- Tested commit: `003e7a42c404e01a51b5103980d3f23f20cca6c1`
+- Exit code: `999`
+>>>>>>> 66466c8 (Record collision validation for 003e7a42c404e01a51b5103980d3f23f20cca6c1)
 - Checks: HeightMapShape3D, uniform physics scale, CharacterBody3D test_move, terrain raycast, active tree CylinderShape3D, tree raycast.
 - Result: **FAIL**
 
 ```text
+<<<<<<< HEAD
 Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
 
 SCRIPT ERROR: Compile Error: Identifier not found: GameState
@@ -31,4 +37,6 @@ SCRIPT ERROR: Invalid call. Nonexistent 'bool' constructor.
           GDScript backtrace (most recent call first):
               [0] _run (res://tools/validate_collision_core.gd:34)
 >>>>>>> 35b58dc (Record collision validation for e4cf07198f693b06fb248dd95592530c8a577407)
+=======
+>>>>>>> 66466c8 (Record collision validation for 003e7a42c404e01a51b5103980d3f23f20cca6c1)
 ```
