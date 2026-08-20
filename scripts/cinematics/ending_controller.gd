@@ -84,8 +84,8 @@ func _start_ending(player: CharacterBody3D, boundary_point: Vector3, outward: Ve
 	_message.text = "КОНЕЦ" if Settings.language == "ru" else "THE END"
 	_message.modulate.a = 1.0
 	_message.add_theme_font_size_override("font_size", 56)
-
-	# Main-menu scene transition replaces this hold once the full menu flow is integrated.
+	await get_tree().create_timer(4.0).timeout
+	SceneFlow.go_to_main_menu()
 
 func _play_pickup(roadside: Vector3, tangent: Vector3) -> void:
 	if pickup_scene == null:
