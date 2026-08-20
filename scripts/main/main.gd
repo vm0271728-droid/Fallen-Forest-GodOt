@@ -9,8 +9,11 @@ const WAKE_UP_SEQUENCE := preload("res://scripts/cinematics/wake_up_sequence.gd"
 var _fresh_run := false
 
 func _enter_tree() -> void:
-	# World/document children need a valid deterministic seed before their _ready() methods run.
-	if SaveSystem.has_run():
+	# NEW GAME has priority over any stale file left behind by storage failure.
+	if SaveSystem.consume_new_run_request():
+		_fresh_run = true
+		SaveSystem.begin_new_run()
+	elif SaveSystem.has_run():
 		var loaded := SaveSystem.load_run()
 		if loaded.is_empty():
 			SaveSystem.delete_run()
