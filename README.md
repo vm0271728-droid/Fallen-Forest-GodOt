@@ -10,10 +10,10 @@ The Unity repository is used only as a reference. The Godot version is a native 
 
 ## Stack
 
-- Engine: Godot 4
+- Engine: Godot 4.7.1 stable
 - Language: GDScript
 - Renderer: Mobile
-- Target: Android landscape / 60 FPS
+- Target: Android 11+ (API 30+), ARM64, landscape / 60 FPS
 
 ## Assets
 
