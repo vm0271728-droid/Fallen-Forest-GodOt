@@ -34,23 +34,15 @@ jobs:
         run: python tools/expand_existing_tree_packs.py
 
       - name: Verify tree-only outputs
+        shell: bash
         run: |
           test -f assets/environment/trees/low_poly_pack/source/Tree_Pack.fbx
           test -f assets/environment/trees/low_poly_pack/source/Tree_Pack.obj
-          test -f assets/environment/trees/dead_firs/variants/fir_1.obj
-          test -f assets/environment/trees/dead_firs/variants/fir_2.obj
-          test -f assets/environment/trees/dead_firs/variants/fir_3.obj
-          test -f assets/environment/trees/dead_firs/variants/fir_4.obj
-          test ! -f 'assets/environment/trees/low_poly_pack/source/LOW POLY FOREST TREE PACK.rar'
-          if find assets/environment/trees/low_poly_pack/textures -maxdepth 1 -type f \
-            \( -iname 'ROCKS_*' -o -iname 'internal_ground*' \) | grep -q .; then
-            echo 'Unused rock/ground payload still present.' >&2
-            exit 1
-          fi
-
-          # Godot creates one OBJ mesh surface per material section. Each dead-fir
-          # variant must stay comfortably below the engine surface limit.
+          for DEP in ROCKS_AO.png ROCKS_DIFFUSE.png ROCKS_NORMALtest.png ROCKS_ROUGHNESS.png; do
+            test -s "assets/environment/trees/low_poly_pack/source/$DEP"
+          done
           for OBJ in assets/environment/trees/dead_firs/variants/fir_*.obj; do
+            test -s "$OBJ"
             SECTIONS=$(grep -c '^usemtl ' "$OBJ" || true)
             echo "$OBJ material sections: $SECTIONS"
             if [ "$SECTIONS" -gt 16 ]; then
@@ -58,18 +50,26 @@ jobs:
               exit 1
             fi
           done
+          test ! -f 'assets/environment/trees/low_poly_pack/source/LOW POLY FOREST TREE PACK.rar'
+          if find assets/environment/trees/low_poly_pack/textures -maxdepth 1 -type f \
+            \( -iname 'ROCKS_*' -o -iname 'internal_ground*' \) | grep -q .; then
+            echo 'Unused rock/ground payload leaked into runtime texture folder.' >&2
+            exit 1
+          fi
 
-      - name: Commit expanded variants safely
+      - name: Commit normalized outputs safely
         shell: bash
         run: |
           git config user.name "Fallen Forest Tree Pack Expander"
           git config user.email "actions@users.noreply.github.com"
-
           git add assets/environment/trees/dead_firs/variants
+          git add assets/environment/trees/low_poly_pack/source/ROCKS_AO.png
+          git add assets/environment/trees/low_poly_pack/source/ROCKS_DIFFUSE.png
+          git add assets/environment/trees/low_poly_pack/source/ROCKS_NORMALtest.png
+          git add assets/environment/trees/low_poly_pack/source/ROCKS_ROUGHNESS.png
           if git diff --cached --quiet; then
-            echo "Tree variants already normalized."
+            echo "Tree pack outputs already normalized."
             exit 0
           fi
-
-          git commit -m "Normalize dead fir runtime variants"
+          git commit -m "Normalize runtime tree pack imports"
           git push origin HEAD:"$GITHUB_REF_NAME"
