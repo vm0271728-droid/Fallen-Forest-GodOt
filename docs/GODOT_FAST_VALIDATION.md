@@ -2,7 +2,7 @@
 
 - Engine: Godot 4.7.1 stable
 - Branch: `fix/android11-integrity`
-- Tested commit: `54f50be315a31cce87757732a82c4b6888488a45`
+- Tested commit: `caed49766373b5453973f5ae64777e911507ec81`
 - Exit code: `0`
 - Result: **PASS**
 
