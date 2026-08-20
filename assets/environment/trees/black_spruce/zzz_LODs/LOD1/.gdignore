@@ -1,1 +1,2 @@
 # Fallen Forest Android runtime uses black spruce LOD2 only.
+# LOD1 is intentionally excluded from Godot import/export.
