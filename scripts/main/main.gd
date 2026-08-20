@@ -26,10 +26,13 @@ func _ready() -> void:
 	elif terrain != null and terrain.has_method("sample_height"):
 		player.global_position = Vector3(0.0, float(terrain.call("sample_height", 0.0, 0.0)) + 0.06, 0.0)
 
-	if is_instance_valid(flashlight_pickup) and terrain != null and terrain.has_method("sample_height"):
-		var p := flashlight_pickup.global_position
-		p.y = float(terrain.call("sample_height", p.x, p.z)) + 0.16
-		flashlight_pickup.global_position = p
+	if is_instance_valid(flashlight_pickup):
+		if GameState.flashlight_acquired:
+			flashlight_pickup.queue_free()
+		elif terrain != null and terrain.has_method("sample_height"):
+			var p := flashlight_pickup.global_position
+			p.y = float(terrain.call("sample_height", p.x, p.z)) + 0.16
+			flashlight_pickup.global_position = p
 
 	if not GameState.final_run_started.is_connected(_on_final_run_started):
 		GameState.final_run_started.connect(_on_final_run_started)
