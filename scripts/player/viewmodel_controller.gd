@@ -25,11 +25,13 @@ var _world_flashlight_rig: Node3D
 var _arms_base := Vector3.ZERO
 var _flashlight_base := Vector3.ZERO
 var _document_base := Vector3.ZERO
+var _document_model_base_transform := Transform3D.IDENTITY
 var _time := 0.0
 var _pickup_playing := false
 var _document_playing := false
 var _flashlight_bone_attached := false
 var _flashlight_grip_base_rotation := Quaternion.IDENTITY
+var _document_bone_attached := false
 
 func _ready() -> void:
 	_player = get_node("../../../..") as CharacterBody3D
@@ -38,12 +40,17 @@ func _ready() -> void:
 	_arms_base = arms_root.position
 	_flashlight_base = flashlight_visual_root.position
 	_document_base = document_visual_root.position
+	_document_model_base_transform = document_model.transform
 	document_visual_root.visible = false
 	_sync_flashlight_visibility()
 
 func _process(delta: float) -> void:
 	_time += delta
 	if _world_flashlight_rig != null and not _pickup_playing:
+		# Continue/load can begin with an already-owned flashlight. Retry the palm
+		# attachment until the deferred Skeleton3D setup reports ready.
+		if bool(_world_flashlight_rig.get("acquired")) and not _flashlight_bone_attached:
+			_try_attach_flashlight_to_right_palm()
 		if _flashlight_bone_attached:
 			var lag_rotation := Quaternion.from_euler(Vector3(
 				_world_flashlight_rig.rotation.x,
@@ -137,6 +144,7 @@ func play_document_pickup(variant: int) -> void:
 	_document_playing = true
 	_player.set_controls_enabled(false)
 	document_visual_root.visible = true
+	document_model.transform = _document_model_base_transform
 
 	var variant_id: int = posmod(variant, 3)
 	var duration: float = float(DOCUMENT_DURATIONS[variant_id])
@@ -155,12 +163,15 @@ func play_document_pickup(variant: int) -> void:
 	raise.tween_property(arms_root, "position", _arms_base + Vector3(-0.018, -0.025, 0.02), raise_time).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	await raise.finished
 
+	await get_tree().process_frame
+	_try_attach_document_to_left_palm()
 	var grip_time: float = duration * 0.20
 	var grip := create_tween()
 	grip.tween_property(arms_root, "position", _arms_base + Vector3(0.008, -0.008, 0.018), grip_time * 0.55).set_trans(Tween.TRANS_SINE)
 	grip.tween_property(arms_root, "position", _arms_base, grip_time * 0.45).set_trans(Tween.TRANS_SINE)
 	await grip.finished
 
+	_detach_document_from_left_palm()
 	var lower_time: float = maxf(0.22, duration - raise_time - grip_time)
 	var lower := create_tween().set_parallel(true)
 	lower.tween_property(document_visual_root, "position", _document_base + Vector3(-0.16, -0.55, -0.08), lower_time).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
@@ -171,9 +182,26 @@ func play_document_pickup(variant: int) -> void:
 	document_visual_root.visible = false
 	document_visual_root.position = _document_base
 	document_visual_root.rotation = Vector3.ZERO
+	document_model.transform = _document_model_base_transform
 	arms_root.position = _arms_base
 	_document_playing = false
 	_player.set_controls_enabled(true)
+
+func _try_attach_document_to_left_palm() -> void:
+	if _document_bone_attached or hand_rig == null:
+		return
+	if not bool(hand_rig.get("ready_for_grips")):
+		return
+	if hand_rig.has_method("attach_preserving_pose_to_left_palm"):
+		if bool(hand_rig.call("attach_preserving_pose_to_left_palm", document_model)):
+			_document_bone_attached = true
+
+func _detach_document_from_left_palm() -> void:
+	if not _document_bone_attached:
+		return
+	if hand_rig != null and hand_rig.has_method("detach_to_viewmodel"):
+		hand_rig.call("detach_to_viewmodel", document_model, document_visual_root, true)
+	_document_bone_attached = false
 
 func hide_flashlight_for_death() -> void:
 	flashlight_model.visible = false
