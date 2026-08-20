@@ -20,7 +20,9 @@ var _ending_visual: Node3D
 var _death_prop: Node3D
 
 func _ready() -> void:
-	acquired = acquired_at_start
+	acquired = acquired_at_start or GameState.flashlight_acquired
+	if acquired_at_start and not GameState.flashlight_acquired:
+		GameState.acquire_flashlight()
 	_apply_state()
 
 func _process(delta: float) -> void:
@@ -40,8 +42,12 @@ func feed_look_delta(delta_pixels: Vector2) -> void:
 	_lag_target.y = clampf(_lag_target.y + delta_pixels.y * vertical_lag, -max_lag * 0.75, max_lag * 0.75)
 
 func acquire(turn_on := true) -> void:
+	var newly_acquired := not acquired
 	acquired = true
 	light.visible = turn_on
+	if newly_acquired:
+		GameState.acquire_flashlight()
+		SaveSystem.save_run()
 
 func set_enabled(enabled: bool) -> void:
 	if not acquired:
