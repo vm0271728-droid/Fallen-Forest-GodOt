@@ -41,7 +41,7 @@ func _run() -> void:
 	_validate_terrain_shape(terrain)
 	_validate_player_grounding(player, terrain)
 	_validate_terrain_raycast(terrain, player)
-	_validate_tree_collision(forest, collision_manager, terrain, player)
+	await _validate_tree_collision(forest, collision_manager, player)
 
 	if is_instance_valid(gameplay):
 		gameplay.queue_free()
@@ -52,7 +52,7 @@ func _validate_terrain_shape(terrain: Node) -> void:
 	if terrain == null:
 		_fail("Terrain node is missing")
 		return
-	if int(terrain.get("collision_layer")) & 1 == 0:
+	if (int(terrain.get("collision_layer")) & 1) == 0:
 		_fail("Terrain is not on movement collision layer 1")
 	var shape_node := terrain.get_node_or_null("CollisionShape3D") as CollisionShape3D
 	if shape_node == null:
@@ -70,7 +70,7 @@ func _validate_player_grounding(player: CharacterBody3D, terrain: Node) -> void:
 	if player == null:
 		_fail("Player node is missing")
 		return
-	if player.collision_mask & 1 == 0:
+	if (player.collision_mask & 1) == 0:
 		_fail("Player collision mask does not include world layer 1")
 	if terrain == null or not terrain.has_method("sample_height"):
 		return
@@ -102,7 +102,7 @@ func _validate_terrain_raycast(terrain: Node, player: CharacterBody3D) -> void:
 	if hit.get("collider") != terrain:
 		_fail("Terrain ray hit unexpected collider: %s" % hit.get("collider"))
 
-func _validate_tree_collision(forest: Node, manager: Node, terrain: Node, player: CharacterBody3D) -> void:
+func _validate_tree_collision(forest: Node, manager: Node, player: CharacterBody3D) -> void:
 	if forest == null:
 		_fail("ForestBlockout node is missing")
 		return
@@ -113,7 +113,7 @@ func _validate_tree_collision(forest: Node, manager: Node, terrain: Node, player
 	if manager == null:
 		_fail("TreeCollisionManager node is missing")
 		return
-	if int(manager.get("collision_layer")) & 1 == 0:
+	if (int(manager.get("collision_layer")) & 1) == 0:
 		_fail("TreeCollisionManager is not on movement collision layer 1")
 	if not manager.has_method("get_active_trunk_shape"):
 		_fail("TreeCollisionManager has no active-trunk test hook")
