@@ -21,7 +21,7 @@ concurrency:
 jobs:
   build-android-debug:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 45
 
     steps:
       - name: Checkout repository
@@ -38,14 +38,17 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Install Android SDK packages
+      - name: Install Godot 4.7 Android SDK requirements
         shell: bash
         run: |
           yes | sdkmanager --licenses >/dev/null || true
           sdkmanager \
             "platform-tools" \
+            "build-tools;35.0.1" \
             "platforms;android-35" \
-            "build-tools;35.0.1"
+            "cmdline-tools;latest" \
+            "cmake;3.10.2.4988404" \
+            "ndk;28.1.13356709"
 
       - name: Download Godot 4.7.1 and export templates
         shell: bash
@@ -110,34 +113,21 @@ jobs:
           echo "code=$CODE" >> "$GITHUB_OUTPUT"
           exit 0
 
-      - name: Install Godot Android build template
-        id: template
-        if: steps.import.outputs.code == '0'
-        shell: bash
-        run: |
-          set +e
-          /tmp/godot/Godot_v4.7.1-stable_linux.x86_64 \
-            --headless --path . --install-android-build-template \
-            > /tmp/android-template.log 2>&1
-          CODE=$?
-          cat /tmp/android-template.log
-          test -d android/build || CODE=1
-          echo "code=$CODE" >> "$GITHUB_OUTPUT"
-          exit 0
-
-      - name: Export Android 11+ debug APK with Gradle
+      - name: Install Gradle template and export Android 11+ APK
         id: export
-        if: steps.import.outputs.code == '0' && steps.template.outputs.code == '0'
+        if: steps.import.outputs.code == '0'
         shell: bash
         run: |
           set +e
           mkdir -p Builds/Android
           /tmp/godot/Godot_v4.7.1-stable_linux.x86_64 \
             --headless --path . \
+            --install-android-build-template \
             --export-debug "Android" "Builds/Android/FallenForest-debug.apk" \
             > /tmp/android-export.log 2>&1
           CODE=$?
           cat /tmp/android-export.log
+          test -d android/build || CODE=1
           test -s Builds/Android/FallenForest-debug.apk || CODE=1
           if grep -Eq 'SCRIPT ERROR:|Failed to load script|Compilation failed|Parse Error|Compile Error|ERROR:.*export' /tmp/android-export.log; then
             CODE=1
@@ -185,17 +175,15 @@ jobs:
         shell: bash
         run: |
           IMPORT_CODE='${{ steps.import.outputs.code }}'
-          TEMPLATE_CODE='${{ steps.template.outputs.code }}'
           EXPORT_CODE='${{ steps.export.outputs.code }}'
           VERIFY_CODE='${{ steps.verify.outputs.code }}'
           MIN_SDK='${{ steps.verify.outputs.min_sdk }}'
           TARGET_SDK='${{ steps.verify.outputs.target_sdk }}'
           if [ -z "$IMPORT_CODE" ]; then IMPORT_CODE=999; fi
-          if [ -z "$TEMPLATE_CODE" ]; then TEMPLATE_CODE=999; fi
           if [ -z "$EXPORT_CODE" ]; then EXPORT_CODE=999; fi
           if [ -z "$VERIFY_CODE" ]; then VERIFY_CODE=999; fi
           OVERALL=0
-          for CODE in "$IMPORT_CODE" "$TEMPLATE_CODE" "$EXPORT_CODE" "$VERIFY_CODE"; do
+          for CODE in "$IMPORT_CODE" "$EXPORT_CODE" "$VERIFY_CODE"; do
             if [ "$CODE" != "0" ]; then OVERALL=1; fi
           done
 
@@ -209,7 +197,6 @@ jobs:
             echo '- Required minimum: Android 11 / API 30'
             echo '- Required ABI: arm64-v8a only'
             echo "- Import exit code: \`$IMPORT_CODE\`"
-            echo "- Android template exit code: \`$TEMPLATE_CODE\`"
             echo "- Export exit code: \`$EXPORT_CODE\`"
             echo "- Manifest/ABI verification exit code: \`$VERIFY_CODE\`"
             echo "- APK minSdk: \`${MIN_SDK:-unknown}\`"
@@ -225,14 +212,9 @@ jobs:
             tail -n 100 /tmp/android-import.log 2>/dev/null || true
             echo '```'
             echo
-            echo '## Template log tail'
-            echo '```text'
-            tail -n 80 /tmp/android-template.log 2>/dev/null || true
-            echo '```'
-            echo
             echo '## Export log tail'
             echo '```text'
-            tail -n 120 /tmp/android-export.log 2>/dev/null || true
+            tail -n 140 /tmp/android-export.log 2>/dev/null || true
             echo '```'
             echo
             echo '## APK badging'
@@ -256,9 +238,8 @@ jobs:
         shell: bash
         run: |
           IMPORT_CODE='${{ steps.import.outputs.code }}'
-          TEMPLATE_CODE='${{ steps.template.outputs.code }}'
           EXPORT_CODE='${{ steps.export.outputs.code }}'
           VERIFY_CODE='${{ steps.verify.outputs.code }}'
-          if [ "$IMPORT_CODE" != "0" ] || [ "$TEMPLATE_CODE" != "0" ] || [ "$EXPORT_CODE" != "0" ] || [ "$VERIFY_CODE" != "0" ]; then
+          if [ "$IMPORT_CODE" != "0" ] || [ "$EXPORT_CODE" != "0" ] || [ "$VERIFY_CODE" != "0" ]; then
             exit 1
           fi
