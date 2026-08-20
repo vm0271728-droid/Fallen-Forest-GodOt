@@ -137,11 +137,10 @@ func _validate_tree_collision(forest: Node, manager: Node, player: CharacterBody
 		return
 
 	var cylinder := trunk.shape as CylinderShape3D
-	var ground_y := trunk.global_position.y - cylinder.height * 0.5
-	var probe_y := ground_y + minf(1.15, cylinder.height * 0.25)
+	var half_height := cylinder.height * 0.5
 	var query := PhysicsRayQueryParameters3D.create(
-		Vector3(trunk.global_position.x - cylinder.radius - 1.25, probe_y, trunk.global_position.z),
-		Vector3(trunk.global_position.x + cylinder.radius + 1.25, probe_y, trunk.global_position.z)
+		trunk.global_position + Vector3.UP * (half_height + 2.0),
+		trunk.global_position - Vector3.UP * (half_height - 0.45)
 	)
 	query.collision_mask = 1
 	if player != null:
