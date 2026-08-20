@@ -2,7 +2,7 @@
 
 - Engine: Godot 4.7.1 stable
 - Branch: `fix/android11-integrity`
-- Tested commit: `e5ffdc598d1e7fd7aa9811b6fd4132e8e580cd45`
+- Tested commit: `6db91f305b0246a60aaac0d061b20627ef65fae3`
 - Full asset import exit code: `0`
 - Main-menu smoke-test exit code: `0`
 - Gameplay smoke-test exit code: `0`
@@ -216,7 +216,7 @@ Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
 Fallen Forest terrain: 129x129 heightfield generated across 720m.
 Fallen Forest: 4 terrain-following trails generated.
 Fallen Forest low-poly tree pack: 0 background trees + 4 trunk/branch trees; rocks and other vegetation excluded.
-Fallen Forest: 3250 trees generated from 9 canonical logical variants (spruce=2196 dead_fir=476 low_poly=578).
+Fallen Forest: 3250 trees generated from 9 canonical logical variants (spruce=2206 dead_fir=453 low_poly=591).
 Fallen Forest: 16000 canonical grass instances generated across 3 MultiMeshes.
 Fallen Forest FPS rig: palm attachments active on R_palm / L_palm.
 ```
