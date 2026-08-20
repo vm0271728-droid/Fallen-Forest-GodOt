@@ -1,5 +1,7 @@
 name: Diagnose Godot asset import
 
+# Dedicated one-purpose importer: identify the exact resource preceding every
+# MAX_MESH_SURFACES error without changing runtime assets.
 on:
   workflow_dispatch:
   push:
