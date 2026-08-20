@@ -117,57 +117,101 @@ def _remap_obj_face_token(token: str, offsets: tuple[int, int, int]) -> str:
 
 
 def split_sequential_obj_objects(source_obj: Path, destination: Path) -> list[str]:
-    """Split this pack's sequential OBJ objects into independent OBJ resources.
+    """Split the dead-fir OBJ pack into independent, Godot-safe resources.
 
-    The supplied `firs.obj` stores fir_1..fir_4 sequentially: each object defines
-    its own vertices/UVs/normals, while face indices remain global. Streaming the
-    file and subtracting per-object offsets preserves geometry without loading the
-    high-poly mesh into a geometry library or rewriting the original source file.
+    The canonical `firs.obj` stores fir_1..fir_4 sequentially. Face indices are
+    global, so each object is remapped to local indices. The source also switches
+    repeatedly between the same small set of materials. Godot's OBJ importer
+    treats every material section as a mesh surface; preserving those repeated
+    switches can exceed MAX_MESH_SURFACES even though there are only three real
+    materials. Faces are therefore regrouped by material inside each tree. This
+    changes neither vertex/UV/normal data nor face membership; it only collapses
+    duplicate material sections into one surface per material.
     """
     reset_dir(destination)
     global_counts = [0, 0, 0]  # v, vt, vn
     offsets = (0, 0, 0)
-    output = None
     names: list[str] = []
 
-    try:
-        with source_obj.open("r", encoding="utf-8", errors="ignore") as src:
-            for raw_line in src:
-                line = raw_line.rstrip("\n")
-                if line.startswith("o "):
-                    if output is not None:
-                        output.close()
-                    object_name = line[2:].strip()
-                    safe_name = "".join(c if c.isalnum() or c in "_-" else "_" for c in object_name)
-                    names.append(safe_name)
-                    output = (destination / f"{safe_name}.obj").open("w", encoding="utf-8")
-                    output.write("mtllib ../firs.mtl\n")
-                    output.write(f"o {safe_name}\n")
-                    offsets = tuple(global_counts)
-                    continue
+    current_name: str | None = None
+    geometry_lines: list[str] = []
+    faces_by_material: dict[str, list[str]] = {}
+    current_material = ""
 
-                if line.startswith("v "):
-                    global_counts[0] += 1
-                elif line.startswith("vt "):
-                    global_counts[1] += 1
-                elif line.startswith("vn "):
-                    global_counts[2] += 1
+    def flush_object() -> None:
+        if current_name is None:
+            return
+        output_path = destination / f"{current_name}.obj"
+        with output_path.open("w", encoding="utf-8") as output:
+            output.write("mtllib ../firs.mtl\n")
+            output.write(f"o {current_name}\n")
+            for geometry_line in geometry_lines:
+                output.write(geometry_line + "\n")
+            for material, faces in faces_by_material.items():
+                if material:
+                    output.write(f"usemtl {material}\n")
+                for face in faces:
+                    output.write(face + "\n")
 
-                if output is None:
-                    continue
+    with source_obj.open("r", encoding="utf-8", errors="ignore") as src:
+        for raw_line in src:
+            line = raw_line.rstrip("\n")
+            if line.startswith("o "):
+                flush_object()
+                object_name = line[2:].strip()
+                safe_name = "".join(c if c.isalnum() or c in "_-" else "_" for c in object_name)
+                names.append(safe_name)
+                current_name = safe_name
+                geometry_lines = []
+                faces_by_material = {}
+                current_material = ""
+                offsets = tuple(global_counts)
+                continue
 
-                if line.startswith("f "):
-                    tokens = line.split()
-                    remapped = [_remap_obj_face_token(token, offsets) for token in tokens[1:]]
-                    output.write("f " + " ".join(remapped) + "\n")
-                elif not line.startswith("mtllib "):
-                    output.write(line + "\n")
-    finally:
-        if output is not None:
-            output.close()
+            if line.startswith("v "):
+                global_counts[0] += 1
+                if current_name is not None:
+                    geometry_lines.append(line)
+                continue
+            if line.startswith("vt "):
+                global_counts[1] += 1
+                if current_name is not None:
+                    geometry_lines.append(line)
+                continue
+            if line.startswith("vn "):
+                global_counts[2] += 1
+                if current_name is not None:
+                    geometry_lines.append(line)
+                continue
+
+            if current_name is None:
+                continue
+
+            if line.startswith("usemtl "):
+                current_material = line[7:].strip()
+                faces_by_material.setdefault(current_material, [])
+                continue
+
+            if line.startswith("f "):
+                tokens = line.split()
+                remapped = [_remap_obj_face_token(token, offsets) for token in tokens[1:]]
+                faces_by_material.setdefault(current_material, []).append(
+                    "f " + " ".join(remapped)
+                )
+
+    flush_object()
 
     if names != ["fir_1", "fir_3", "fir_2", "fir_4"]:
         raise RuntimeError(f"Unexpected dead-fir object layout: {names}")
+
+    for name in names:
+        path = destination / f"{name}.obj"
+        material_sections = sum(1 for line in path.open("r", encoding="utf-8") if line.startswith("usemtl "))
+        if material_sections > 16:
+            raise RuntimeError(
+                f"Dead-fir variant {name} still has too many material sections: {material_sections}"
+            )
+
     return names
 
 
@@ -252,7 +296,7 @@ def write_manifest() -> None:
         "",
         "The tree archives are packs, not single-tree assets. Runtime forest scattering uses individual mesh variants, not the whole pack as one prop.",
         "",
-        "The dead-fir source is deterministically split into `fir_1`, `fir_2`, `fir_3`, and `fir_4` OBJ variants without modifying the canonical original OBJ.",
+        "The dead-fir source is deterministically split into `fir_1`, `fir_2`, `fir_3`, and `fir_4` OBJ variants without modifying the canonical original OBJ. Repeated material sections are collapsed to one section per material so Godot cannot exceed its mesh-surface limit.",
         "",
         "`low_poly_pack` is tree-only for Fallen Forest: grass, bushes, rocks and ground assets from that pack are not gameplay assets and must not be instantiated. Only tree source files and tree material textures are retained by the importer.",
         "",
