@@ -11,8 +11,13 @@ var _fresh_run := false
 func _enter_tree() -> void:
 	# World/document children need a valid deterministic seed before their _ready() methods run.
 	if SaveSystem.has_run():
-		_fresh_run = false
-		SaveSystem.load_run()
+		var loaded := SaveSystem.load_run()
+		if loaded.is_empty():
+			SaveSystem.delete_run()
+			_fresh_run = true
+			SaveSystem.begin_new_run()
+		else:
+			_fresh_run = false
 	else:
 		_fresh_run = true
 		SaveSystem.begin_new_run()
