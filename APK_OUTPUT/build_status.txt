@@ -1,5 +1,5 @@
 Nocturne Forest Android build
-commit=dc290d4ed81a578e0be31799081d1407f2d1a44a
+commit=b7a4ef9824dc9e8e2c37583596ea5335effc52d4
 import_code=0
 build_code=0
 
@@ -25,12 +25,6 @@ Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
 [  16% ] [90m[1mloading_editor_layout[22m | Loading docks...[39m[0m
 [92m[ DONE ][39m [1mloading_editor_layout[22m
 [0m
-SCRIPT ERROR: Parse Error: Cannot infer the type of "delta_pos" variable because the value doesn't have a set type.
-          at: GDScript::reload (res://scripts/floating_joystick.gd:34)
-SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
-          at: GDScript::reload (res://scripts/main.gd:0)
-ERROR: Failed to load script "res://scripts/main.gd" with error "Parse error".
-   at: load (modules/gdscript/gdscript_resource_format.cpp:46)
 cannot connect to daemon at tcp:5037: Connection refused
 
 --- export log ---
@@ -155,12 +149,6 @@ ADDING: kotlin/kotlin.kotlin_builtins
 ADDING: kotlin/ranges/ranges.kotlin_builtins
 ADDING: kotlin/reflect/reflect.kotlin_builtins
 [   0% ] [90m[1mexport[22m | Adding files...[39m[0m
-SCRIPT ERROR: Parse Error: Cannot infer the type of "delta_pos" variable because the value doesn't have a set type.
-          at: GDScript::reload (res://scripts/floating_joystick.gd:34)
-SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
-          at: GDScript::reload (res://scripts/main.gd:0)
-ERROR: Failed to load script "res://scripts/main.gd" with error "Parse error".
-   at: load (modules/gdscript/gdscript_resource_format.cpp:46)
 [  97% ] [90m[1mexport[22m | Aligning APK...[39m[0m
 [  98% ] [90m[1mexport[22m | Signing debug APK...[39m[0m
 Signing binary using: 
