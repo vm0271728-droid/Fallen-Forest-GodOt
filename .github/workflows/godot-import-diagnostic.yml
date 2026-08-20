@@ -1,0 +1,98 @@
+name: Diagnose Godot asset import
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/godot-import-diagnostic.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  diagnose-import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download Godot 4.7.1 stable
+        shell: bash
+        run: |
+          curl -L --fail --retry 3 \
+            -o /tmp/godot.zip \
+            https://github.com/godotengine/godot/releases/download/4.7.1-stable/Godot_v4.7.1-stable_linux.x86_64.zip
+          unzip -q /tmp/godot.zip -d /tmp/godot
+          chmod +x /tmp/godot/Godot_v4.7.1-stable_linux.x86_64
+
+      - name: Import and extract failing resource context
+        id: diagnose
+        shell: bash
+        run: |
+          set +e
+          timeout 420s /tmp/godot/Godot_v4.7.1-stable_linux.x86_64 \
+            --headless --path . --import > /tmp/import-diagnostic.log 2>&1
+          RAW_CODE=$?
+
+          awk '
+            /reimport/ && /\|/ { last_reimport=$0 }
+            /ERROR: Condition "surfaces.size\(\) == RenderingServerEnums::MAX_MESH_SURFACES"/ {
+              print "CONTEXT: " last_reimport
+              print $0
+            }
+          ' /tmp/import-diagnostic.log > /tmp/surface-context.log
+
+          COUNT=$(grep -c '^ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES"' /tmp/import-diagnostic.log || true)
+          echo "raw_code=$RAW_CODE" >> "$GITHUB_OUTPUT"
+          echo "surface_errors=$COUNT" >> "$GITHUB_OUTPUT"
+          cat /tmp/surface-context.log
+          exit 0
+
+      - name: Build diagnostic report
+        if: always()
+        shell: bash
+        run: |
+          RAW='${{ steps.diagnose.outputs.raw_code }}'
+          COUNT='${{ steps.diagnose.outputs.surface_errors }}'
+          if [ -z "$RAW" ]; then RAW=999; fi
+          if [ -z "$COUNT" ]; then COUNT=unknown; fi
+          {
+            echo '# Godot import mesh-surface diagnostic'
+            echo
+            echo '- Engine: Godot 4.7.1 stable'
+            echo "- Tested commit: \`$GITHUB_SHA\`"
+            echo "- Raw import exit code: \`$RAW\`"
+            echo "- MAX_MESH_SURFACES errors: \`$COUNT\`"
+            echo
+            echo '## Error contexts'
+            echo '```text'
+            cat /tmp/surface-context.log 2>/dev/null || true
+            echo '```'
+            echo
+            echo '## Import resource sequence tail'
+            echo '```text'
+            grep -E 'reimport.*\|' /tmp/import-diagnostic.log | tail -n 80 || true
+            echo '```'
+          } > /tmp/IMPORT_DIAGNOSTIC.md
+
+      - name: Publish diagnostic safely
+        if: always()
+        shell: bash
+        run: |
+          git config user.name "Fallen Forest Import Diagnostic"
+          git config user.email "actions@users.noreply.github.com"
+          PUBLISHED=0
+          for ATTEMPT in 1 2 3; do
+            git fetch origin "$GITHUB_REF_NAME"
+            git reset --hard "origin/$GITHUB_REF_NAME"
+            mkdir -p docs
+            cp /tmp/IMPORT_DIAGNOSTIC.md docs/IMPORT_DIAGNOSTIC.md
+            git add docs/IMPORT_DIAGNOSTIC.md
+            if git diff --cached --quiet; then PUBLISHED=1; break; fi
+            git commit -m "Record import diagnostic for $GITHUB_SHA"
+            if git push origin HEAD:"$GITHUB_REF_NAME"; then PUBLISHED=1; break; fi
+          done
+          if [ "$PUBLISHED" != "1" ]; then exit 1; fi
