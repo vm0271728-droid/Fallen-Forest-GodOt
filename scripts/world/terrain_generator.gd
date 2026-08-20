@@ -17,6 +17,8 @@ var _cell_size := 1.0
 var generated := false
 
 func _ready() -> void:
+	collision_layer = 1
+	collision_mask = 0
 	generate()
 
 func generate() -> void:
@@ -121,12 +123,25 @@ func _build_mesh() -> void:
 	mesh_instance.mesh = terrain_mesh
 
 func _build_collision() -> void:
+	# CollisionShape3D physics shapes must not be non-uniformly scaled. The old
+	# implementation scaled X/Z by cell size but left Y at 1, which could make
+	# the heightfield unreliable on device. Bake the inverse cell scale into the
+	# height samples, then apply one uniform scale to the whole HeightMapShape3D.
+	var physics_heights := PackedFloat32Array()
+	physics_heights.resize(_heights.size())
+	var inverse_cell := 1.0 / maxf(_cell_size, 0.0001)
+	for i in _heights.size():
+		physics_heights[i] = _heights[i] * inverse_cell
+
 	var shape := HeightMapShape3D.new()
 	shape.map_width = resolution
 	shape.map_depth = resolution
-	shape.map_data = _heights
+	shape.map_data = physics_heights
+	collision.position = Vector3.ZERO
+	collision.rotation = Vector3.ZERO
+	collision.scale = Vector3.ONE * _cell_size
+	collision.disabled = false
 	collision.shape = shape
-	collision.scale = Vector3(_cell_size, 1.0, _cell_size)
 
 func _height_index(x: int, z: int) -> float:
 	return _heights[z * resolution + x]
