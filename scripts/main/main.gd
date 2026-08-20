@@ -1,6 +1,10 @@
 extends Node3D
 
 const WAKE_UP_SEQUENCE := preload("res://scripts/cinematics/wake_up_sequence.gd")
+const ANDROID_TREE_COUNT := 2200
+const ANDROID_GRASS_COUNT := 8000
+const ANDROID_COLLISION_POOL_SIZE := 160
+const ANDROID_COLLISION_RADIUS := 64.0
 
 @onready var terrain: Node = $Terrain
 @onready var player: CharacterBody3D = $Player
@@ -9,6 +13,8 @@ const WAKE_UP_SEQUENCE := preload("res://scripts/cinematics/wake_up_sequence.gd"
 var _fresh_run := false
 
 func _enter_tree() -> void:
+	_apply_android_runtime_profile()
+
 	# NEW GAME has priority over any stale file left behind by storage failure.
 	if SaveSystem.consume_new_run_request():
 		_fresh_run = true
@@ -47,6 +53,25 @@ func _ready() -> void:
 
 	if _fresh_run:
 		call_deferred("_play_fresh_run_wake_up")
+
+func _apply_android_runtime_profile() -> void:
+	if not OS.has_feature("android"):
+		return
+
+	var forest := get_node_or_null("ForestBlockout")
+	if forest != null:
+		forest.set("tree_count", mini(int(forest.get("tree_count")), ANDROID_TREE_COUNT))
+
+	var grass := get_node_or_null("GrassSystem")
+	if grass != null:
+		grass.set("target_count", mini(int(grass.get("target_count")), ANDROID_GRASS_COUNT))
+
+	var collision_manager := get_node_or_null("TreeCollisionManager")
+	if collision_manager != null:
+		collision_manager.set("pool_size", mini(int(collision_manager.get("pool_size")), ANDROID_COLLISION_POOL_SIZE))
+		collision_manager.set("activation_radius", minf(float(collision_manager.get("activation_radius")), ANDROID_COLLISION_RADIUS))
+
+	print("Fallen Forest Android profile: trees<=%d grass<=%d collision_pool<=%d radius<=%.1f." % [ANDROID_TREE_COUNT, ANDROID_GRASS_COUNT, ANDROID_COLLISION_POOL_SIZE, ANDROID_COLLISION_RADIUS])
 
 func _play_fresh_run_wake_up() -> void:
 	var wake := WAKE_UP_SEQUENCE.new()
