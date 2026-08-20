@@ -15,8 +15,8 @@ permissions:
   contents: write
 
 concurrency:
-  group: godot-validate-main
-  cancel-in-progress: false
+  group: godot-validate-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   validate:
@@ -49,14 +49,23 @@ jobs:
           IMPORT_CODE=$?
           cat /tmp/godot-import.log
 
-          SMOKE_CODE=0
+          MENU_CODE=0
+          GAME_CODE=0
           if [ "$IMPORT_CODE" = "0" ]; then
-            timeout 40s "$GODOT" --headless --path . --quit-after 6 \
-              > /tmp/godot-smoke.log 2>&1
-            SMOKE_CODE=$?
-            cat /tmp/godot-smoke.log
+            timeout 25s "$GODOT" --headless --path . \
+              --scene res://scenes/ui/main_menu.tscn --quit-after 6 \
+              > /tmp/godot-menu-smoke.log 2>&1
+            MENU_CODE=$?
+            cat /tmp/godot-menu-smoke.log
+
+            timeout 55s "$GODOT" --headless --path . \
+              --scene res://scenes/main/main.tscn --quit-after 12 \
+              > /tmp/godot-game-smoke.log 2>&1
+            GAME_CODE=$?
+            cat /tmp/godot-game-smoke.log
           else
-            echo "Gameplay smoke test skipped because import failed." > /tmp/godot-smoke.log
+            echo "Main-menu smoke test skipped because import failed." > /tmp/godot-menu-smoke.log
+            echo "Gameplay smoke test skipped because import failed." > /tmp/godot-game-smoke.log
           fi
 
           INSPECT_CODE=0
@@ -70,25 +79,29 @@ jobs:
           fi
 
           CODE=$IMPORT_CODE
-          if [ "$CODE" = "0" ] && [ "$SMOKE_CODE" != "0" ]; then CODE=$SMOKE_CODE; fi
+          if [ "$CODE" = "0" ] && [ "$MENU_CODE" != "0" ]; then CODE=$MENU_CODE; fi
+          if [ "$CODE" = "0" ] && [ "$GAME_CODE" != "0" ]; then CODE=$GAME_CODE; fi
           if [ "$CODE" = "0" ] && [ "$INSPECT_CODE" != "0" ]; then CODE=$INSPECT_CODE; fi
           echo "code=$CODE" >> "$GITHUB_OUTPUT"
           echo "import_code=$IMPORT_CODE" >> "$GITHUB_OUTPUT"
-          echo "smoke_code=$SMOKE_CODE" >> "$GITHUB_OUTPUT"
+          echo "menu_code=$MENU_CODE" >> "$GITHUB_OUTPUT"
+          echo "game_code=$GAME_CODE" >> "$GITHUB_OUTPUT"
           echo "inspect_code=$INSPECT_CODE" >> "$GITHUB_OUTPUT"
           exit 0
 
       - name: Record validation result
-        if: always()
+        if: always() && github.ref == 'refs/heads/main'
         shell: bash
         run: |
           CODE='${{ steps.validation.outputs.code }}'
           IMPORT_CODE='${{ steps.validation.outputs.import_code }}'
-          SMOKE_CODE='${{ steps.validation.outputs.smoke_code }}'
+          MENU_CODE='${{ steps.validation.outputs.menu_code }}'
+          GAME_CODE='${{ steps.validation.outputs.game_code }}'
           INSPECT_CODE='${{ steps.validation.outputs.inspect_code }}'
           if [ -z "$CODE" ]; then CODE=999; fi
           if [ -z "$IMPORT_CODE" ]; then IMPORT_CODE=999; fi
-          if [ -z "$SMOKE_CODE" ]; then SMOKE_CODE=999; fi
+          if [ -z "$MENU_CODE" ]; then MENU_CODE=999; fi
+          if [ -z "$GAME_CODE" ]; then GAME_CODE=999; fi
           if [ -z "$INSPECT_CODE" ]; then INSPECT_CODE=999; fi
           TESTED_SHA="$GITHUB_SHA"
           mkdir -p docs
@@ -98,7 +111,8 @@ jobs:
             echo '- Engine: Godot 4.7.1 stable'
             echo "- Tested commit: \`$TESTED_SHA\`"
             echo "- Full asset import exit code: \`$IMPORT_CODE\`"
-            echo "- Gameplay smoke-test exit code: \`$SMOKE_CODE\`"
+            echo "- Main-menu smoke-test exit code: \`$MENU_CODE\`"
+            echo "- Gameplay smoke-test exit code: \`$GAME_CODE\`"
             echo "- Asset inspection exit code: \`$INSPECT_CODE\`"
             echo "- Overall exit code: \`$CODE\`"
             if [ "$CODE" = "0" ]; then
@@ -113,16 +127,22 @@ jobs:
             tail -n 100 /tmp/godot-import.log 2>/dev/null || true
             echo '```'
             echo
+            echo '## Tail of main-menu smoke-test log'
+            echo
+            echo '```text'
+            tail -n 120 /tmp/godot-menu-smoke.log 2>/dev/null || true
+            echo '```'
+            echo
             echo '## Tail of gameplay smoke-test log'
             echo
             echo '```text'
-            tail -n 140 /tmp/godot-smoke.log 2>/dev/null || true
+            tail -n 160 /tmp/godot-game-smoke.log 2>/dev/null || true
             echo '```'
             echo
             echo '## Tail of asset inspector log'
             echo
             echo '```text'
-            tail -n 80 /tmp/godot-assets.log 2>/dev/null || true
+            tail -n 100 /tmp/godot-assets.log 2>/dev/null || true
             echo '```'
           } > docs/GODOT_VALIDATION.md
 
@@ -138,6 +158,12 @@ jobs:
             git push origin HEAD:main || true
           fi
 
+      - name: Enforce validation result
+        if: always()
+        shell: bash
+        run: |
+          CODE='${{ steps.validation.outputs.code }}'
+          if [ -z "$CODE" ]; then CODE=999; fi
           if [ "$CODE" != "0" ]; then
             exit "$CODE"
           fi
