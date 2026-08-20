@@ -50,7 +50,11 @@ jobs:
           done
 
           test -f assets/environment/trees/low_poly_pack/source/Tree_Pack.fbx
-          test -f assets/environment/trees/low_poly_pack/source/Tree_Pack.obj
+          test ! -f assets/environment/trees/low_poly_pack/source/Tree_Pack.obj
+          test ! -f assets/environment/trees/low_poly_pack/source/Tree_Pack.mtl
+          test -s assets/environment/trees/low_poly_pack/source_archive/Tree_Pack.obj
+          test -s assets/environment/trees/low_poly_pack/source_archive/Tree_Pack.mtl
+          test -f assets/environment/trees/low_poly_pack/source_archive/.gdignore
           for DEP in ROCKS_AO.png ROCKS_DIFFUSE.png ROCKS_NORMALtest.png ROCKS_ROUGHNESS.png; do
             test -s "assets/environment/trees/low_poly_pack/source/$DEP"
           done
@@ -71,6 +75,12 @@ jobs:
           git add assets/environment/trees/dead_firs/source_archive/.gdignore
           git add assets/environment/trees/dead_firs/source_archive/firs.obj
           git add -u assets/environment/trees/dead_firs/firs.obj
+
+          git add assets/environment/trees/low_poly_pack/source_archive/.gdignore
+          git add assets/environment/trees/low_poly_pack/source_archive/Tree_Pack.obj
+          git add assets/environment/trees/low_poly_pack/source_archive/Tree_Pack.mtl
+          git add -u assets/environment/trees/low_poly_pack/source/Tree_Pack.obj
+          git add -u assets/environment/trees/low_poly_pack/source/Tree_Pack.mtl
           git add assets/environment/trees/low_poly_pack/source/ROCKS_AO.png
           git add assets/environment/trees/low_poly_pack/source/ROCKS_DIFFUSE.png
           git add assets/environment/trees/low_poly_pack/source/ROCKS_NORMALtest.png
@@ -80,5 +90,5 @@ jobs:
             echo "Tree pack outputs already normalized."
             exit 0
           fi
-          git commit -m "Archive raw tree sources and normalize runtime imports"
+          git commit -m "Archive non-runtime tree sources"
           git push origin HEAD:"$GITHUB_REF_NAME"
