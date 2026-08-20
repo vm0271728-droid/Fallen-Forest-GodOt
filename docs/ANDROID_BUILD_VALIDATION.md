@@ -2,7 +2,7 @@
 
 - Engine: Godot 4.7.1 stable
 - Branch: `fix/android11-integrity`
-- Tested commit: `ad2fc5a575688e9b334d54227321c4de69a45eb7`
+- Tested commit: `e5ffdc598d1e7fd7aa9811b6fd4132e8e580cd45`
 - Required minimum: Android 11 / API 30
 - Required ABI: arm64-v8a only
 - Import exit code: `0`
@@ -149,7 +149,7 @@ WARNING: 1 ObjectDB instance was leaked at exit (run with `--verbose` for detail
 
 ## APK badging
 ```text
-package: name='com.fallenforest.horror' versionCode='1' versionName='0.2.0' platformBuildVersionName='16' platformBuildVersionCode='36' compileSdkVersion='36' compileSdkVersionCodename='16'
+package: name='com.fallenforest.horror' versionCode='2' versionName='0.2.1' platformBuildVersionName='16' platformBuildVersionCode='36' compileSdkVersion='36' compileSdkVersionCodename='16'
 install-location:'auto'
 sdkVersion:'30'
 targetSdkVersion:'35'
@@ -252,8 +252,6 @@ application: label='Fallen Forest' icon='res/mipmap-anydpi-v26/icon.xml'
 application-debuggable
 feature-group: label=''
   uses-gl-es: '0x30000'
-  uses-feature-not-required: name='android.hardware.vulkan.level' version='1'
-  uses-feature-not-required: name='android.hardware.vulkan.version' version='4198400'
   uses-feature: name='android.hardware.faketouch'
   uses-implied-feature: name='android.hardware.faketouch' reason='default feature for all apps'
   uses-feature: name='android.hardware.screen.landscape'
