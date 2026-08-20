@@ -30,6 +30,7 @@ window/handheld/orientation=0
 renderer/rendering_method="mobile"
 renderer/rendering_method.mobile="mobile"
 textures/default_filters/use_nearest_mipmap_filter=false
+textures/vram_compression/import_etc2_astc=true
 
 [debug]
 settings/fps/force_fps=60
