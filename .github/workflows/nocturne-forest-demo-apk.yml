@@ -6,6 +6,11 @@ on:
     paths:
       - "NocturneForestDemo/**"
       - ".github/workflows/nocturne-forest-demo-apk.yml"
+  pull_request:
+    branches: ["main"]
+    paths:
+      - "NocturneForestDemo/**"
+      - ".github/workflows/nocturne-forest-demo-apk.yml"
   workflow_dispatch:
 
 permissions:
