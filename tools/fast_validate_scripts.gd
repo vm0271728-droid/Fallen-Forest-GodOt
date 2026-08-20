@@ -30,6 +30,11 @@ func _scan_dir(path: String) -> void:
 		if dir.current_is_dir():
 			_scan_dir(child_path)
 		elif entry.get_extension().to_lower() == "gd":
+			# Loading the currently executing SceneTree script again with
+			# CACHE_MODE_IGNORE can crash Godot 4.7.1 itself. It is already proven
+			# parsable because this process is executing it, so skip only this file.
+			if child_path == "res://tools/fast_validate_scripts.gd":
+				continue
 			var resource: Resource = ResourceLoader.load(child_path, "", ResourceLoader.CACHE_MODE_IGNORE)
 			if not is_instance_valid(resource):
 				_failures.append("Failed to compile %s" % child_path)
