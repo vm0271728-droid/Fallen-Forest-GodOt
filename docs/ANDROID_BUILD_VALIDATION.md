@@ -2,7 +2,7 @@
 
 - Engine: Godot 4.7.1 stable
 - Branch: `main`
-- Tested commit: `735a3b4953d772b5b49a978d9266782590f4f288`
+- Tested commit: `972bbc5a7e2af991c3c82800ed95ec6c6a30a09c`
 - Required minimum: Android 11 / API 30
 - Required ABI: arm64-v8a only
 - Import exit code: `999`
@@ -14,6 +14,106 @@
 
 ## Import log tail
 ```text
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
 ```
 
 ## Export log tail
