@@ -2,7 +2,7 @@
 
 - Engine: Godot 4.7.1 stable
 - Branch: `main`
-- Tested commit: `de24f93d412e1df74b1cda47768ae440bb3d6d03`
+- Tested commit: `972bbc5a7e2af991c3c82800ed95ec6c6a30a09c`
 - Exit code: `0`
 - Result: **PASS**
 
