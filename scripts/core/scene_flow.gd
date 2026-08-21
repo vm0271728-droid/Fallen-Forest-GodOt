@@ -5,7 +5,7 @@ const GAME_SCENE := "res://scenes/main/main.tscn"
 
 func start_new_game() -> void:
 	AudioDirector.release_silence()
-	SaveSystem.request_new_run()
+	SaveSystem.begin_new_run()
 	_load_game()
 
 func continue_game() -> void:
