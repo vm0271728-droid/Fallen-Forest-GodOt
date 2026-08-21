@@ -27,25 +27,23 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -280.0
-offset_top = -90.0
-offset_right = 280.0
-offset_bottom = 90.0
+offset_left = -160.0
+offset_top = -70.0
+offset_right = 160.0
+offset_bottom = 70.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 22
+theme_override_constants/separation = 14
 
 [node name="Title" type="Label" parent="Center"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.76, 0.80, 0.79, 1)
-theme_override_font_sizes/font_size = 38
+theme_override_font_sizes/font_size = 28
 text = "FALLEN FOREST"
 horizontal_alignment = 1
 
 [node name="Loading" type="Label" parent="Center"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.38, 0.42, 0.41, 1)
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 16
 text = "Loading..."
 horizontal_alignment = 1
 
@@ -55,15 +53,15 @@ anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = -3.0
+offset_top = -8.0
+offset_bottom = -4.0
 grow_horizontal = 2
 grow_vertical = 0
-color = Color(0.08, 0.09, 0.09, 1)
 
 [node name="ProgressFill" type="ColorRect" parent="."]
 layout_mode = 1
 anchor_top = 1.0
 anchor_bottom = 1.0
-offset_top = -3.0
+offset_top = -8.0
+offset_bottom = -4.0
 grow_vertical = 0
-color = Color(0.68, 0.72, 0.70, 1)
