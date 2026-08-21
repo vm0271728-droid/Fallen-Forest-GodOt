@@ -2,7 +2,7 @@
 
 - Engine: Godot 4.7.1 stable
 - Branch: `main`
-- Tested commit: `b2a0c5b6857a130a25846de768dd6018131ef7b6`
+- Tested commit: `82f40d6e5cff20b52d613c03c5aefc44f869c554`
 - Required minimum: Android 11 / API 30
 - Required ABI: arm64-v8a only
 - Import exit code: `1`
@@ -122,6 +122,6 @@ cannot connect to daemon at tcp:5037: Connection refused
 
 ## APK badging
 ```text
-08-21 17:01:30.361  2643  2643 W asset   : Asset path Builds/Android/FallenForest-debug.apk is neither a directory nor file (type=1).
+08-21 17:13:57.915  2698  2698 W asset   : Asset path Builds/Android/FallenForest-debug.apk is neither a directory nor file (type=1).
 ERROR: dump failed because assets could not be loaded
 ```
