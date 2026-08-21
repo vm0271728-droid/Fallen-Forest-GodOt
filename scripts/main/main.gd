@@ -7,13 +7,14 @@ const WAKE_UP_SEQUENCE := preload("res://scripts/cinematics/wake_up_sequence.gd"
 @onready var flashlight_pickup: Node3D = $FlashlightPickup
 
 func _ready() -> void:
-	SaveSystem.begin_new_run()
+	await get_tree().process_frame
 
 	if terrain != null and terrain.has_method("generate") and not bool(terrain.get("generated")):
 		terrain.call("generate")
 
 	if terrain != null and terrain.has_method("sample_height"):
-		player.global_position = Vector3(0.0, float(terrain.call("sample_height", 0.0, 0.0)) + 0.06, 0.0)
+		var height := float(terrain.call("sample_height", 0.0, 0.0))
+		player.global_position = Vector3(0.0, height + 0.06, 0.0)
 
 	if is_instance_valid(flashlight_pickup) and GameState.flashlight_acquired:
 		flashlight_pickup.queue_free()
