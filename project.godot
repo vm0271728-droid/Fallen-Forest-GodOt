@@ -13,6 +13,7 @@ Settings="*res://scripts/core/settings.gd"
 InputState="*res://scripts/input/input_state.gd"
 AudioDirector="*res://scripts/audio/audio_director.gd"
 SceneFlow="*res://scripts/core/scene_flow.gd"
+CrashLogger="*res://scripts/core/crash_logger.gd"
 
 [display]
 window/size/viewport_width=1920
