@@ -2,13 +2,13 @@
 
 - Engine: Godot 4.7.1 stable
 - Branch: `main`
-- Tested commit: `de24f93d412e1df74b1cda47768ae440bb3d6d03`
-- Full asset import exit code: `1`
-- Main-menu smoke-test exit code: `0`
-- Gameplay smoke-test exit code: `0`
-- Runtime floor/tree physics exit code: `0`
-- Asset inspection exit code: `0`
-- Overall exit code: `1`
+- Tested commit: `e32e4131f5fc0dcd73089391b080fa8baef83c7f`
+- Full asset import exit code: `999`
+- Main-menu smoke-test exit code: `999`
+- Gameplay smoke-test exit code: `999`
+- Runtime floor/tree physics exit code: `999`
+- Asset inspection exit code: `999`
+- Overall exit code: `999`
 - Result: **FAIL**
 
 ## MAX_MESH_SURFACES context
@@ -717,6 +717,23 @@
 
 ## Last imported resources
 ```text
+[  67% ] [90m[1mreimport[22m | Grass2_AO.png[39m[0m
+[  67% ] [90m[1mreimport[22m | Grass2_Gloss.png[39m[0m
+[  67% ] [90m[1mreimport[22m | Grass2_Normal.png[39m[0m
+[  68% ] [90m[1mreimport[22m | Grass2_Opacity.png[39m[0m
+[  68% ] [90m[1mreimport[22m | Grass3.png[39m[0m
+[  69% ] [90m[1mreimport[22m | Grass3_AO.png[39m[0m
+[  69% ] [90m[1mreimport[22m | Grass3_Gloss.png[39m[0m
+[  70% ] [90m[1mreimport[22m | Grass3_Normal.png[39m[0m
+[  70% ] [90m[1mreimport[22m | Grass3_Opacity.png[39m[0m
+[  71% ] [90m[1mreimport[22m | Picea_mariana_HD_Picea_mariana_fol_1_Picea_mariana_fol_01_gray_LOD2_Color.png[39m[0m
+[  71% ] [90m[1mreimport[22m | Picea_mariana_HD_Picea_mariana_fol_1_Picea_mariana_fol_01_hl_LOD2_Specular.png[39m[0m
+[  71% ] [90m[1mreimport[22m | Picea_mariana_HD_Picea_mariana_fol_1_Picea_mariana_fol_01_n_LOD2_Normal.png[39m[0m
+[  72% ] [90m[1mreimport[22m | Picea_mariana_HD_Picea_mariana_fol_2_long_Picea_mariana_fol_02_long_a_LOD2_Transparency.png[39m[0m
+[  72% ] [90m[1mreimport[22m | Picea_mariana_HD_Picea_mariana_fol_2_long_Picea_mariana_fol_02_long_bl_LOD2_BackLight.png[39m[0m
+[  73% ] [90m[1mreimport[22m | Picea_mariana_HD_Picea_mariana_fol_2_long_Picea_mariana_fol_02_long_gray_LOD2_Color.png[39m[0m
+[  73% ] [90m[1mreimport[22m | Picea_mariana_HD_Picea_mariana_fol_2_long_Picea_mariana_fol_02_long_hl_LOD2_Specular.png[39m[0m
+[  74% ] [90m[1mreimport[22m | Picea_mariana_HD_Picea_mariana_fol_2_long_Picea_mariana_fol_02_long_n_LOD2_Normal.png[39m[0m
 [  74% ] [90m[1mreimport[22m | Picea_mariana_HD_Picea_mariana_fol_2_short_Picea_mariana_fol_02_short_a_LOD2_Transparency.png[39m[0m
 [  75% ] [90m[1mreimport[22m | Picea_mariana_HD_Picea_mariana_fol_2_short_Picea_mariana_fol_02_short_bl_LOD2_BackLight.png[39m[0m
 [  75% ] [90m[1mreimport[22m | Picea_mariana_HD_Picea_mariana_fol_2_short_Picea_mariana_fol_02_short_gray_LOD2_Color.png[39m[0m
@@ -760,165 +777,144 @@
 [  92% ] [90m[1mreimport[22m | fir_3.obj[39m[0m
 [  92% ] [90m[1mreimport[22m | fir_4.obj[39m[0m
 [  92% ] [90m[1mreimport[22m | firs.obj[39m[0m
-[  93% ] [90m[1mreimport[22m | Tree_Pack.obj[39m[0m
-[  93% ] [90m[1mreimport[22m | Pickup Afghanistan.fbx[39m[0m
-[  94% ] [90m[1mreimport[22m | BoiledOne.fbx[39m[0m
-[  94% ] [90m[1mreimport[22m | T_O_E Locust - By Doumty.fbx[39m[0m
-[  95% ] [90m[1mreimport[22m | document_file_folder (1).glb[39m[0m
-[  95% ] [90m[1mreimport[22m | Picea mariana HD_Arctic mat 100_LOD2.fbx[39m[0m
-[  96% ] [90m[1mreimport[22m | Grass.fbx[39m[0m
-[  96% ] [90m[1mreimport[22m | flashlightfbx.fbx[39m[0m
-[  96% ] [90m[1mreimport[22m | Picea mariana HD_Arctic mat 100_LOD0.fbx[39m[0m
-[  97% ] [90m[1mreimport[22m | Picea mariana HD_Arctic mat 100_LOD4.fbx[39m[0m
-[  97% ] [90m[1mreimport[22m | fpsarms.fbx[39m[0m
-[  98% ] [90m[1mreimport[22m | Picea mariana HD_Arctic mat 100_LOD3.fbx[39m[0m
-[  98% ] [90m[1mreimport[22m | Picea mariana HD_Arctic mat 100_LOD1.fbx[39m[0m
-[  99% ] [90m[1mreimport[22m | Tree_Pack.fbx[39m[0m
-[  99% ] [90m[1mreimport[22m | Finalizing Asset Import...[39m[0m
-[   0% ] [90m[1mreimport[22m | Started (Re)Importing Assets (227 steps)[39m[0m
-[   0% ] [90m[1mreimport[22m | Executing post-reimport operations...[39m[0m
 ```
 
 ## Import log tail
 ```text
-[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
-ERROR: Resource file not found: res:// (expected type: Texture2D)
-   at: _load (core/io/resource_loader.cpp:325)
-ERROR: Can't open file from path 'res://assets/environment/trees/low_poly_pack/source/Background_Tree_Atlas_Diffuse.png'.
-   at: get_file_as_bytes (core/io/file_access.cpp:907)
-WARNING: FBX: Image index '0' couldn't be loaded from path: res://assets/environment/trees/low_poly_pack/source/Background_Tree_Atlas_Diffuse.png because there was no data to load. Skipping it.
-     at: _parse_images (modules/fbx/fbx_document.cpp:1081)
-ERROR: Resource file not found: res:// (expected type: Texture2D)
-   at: _load (core/io/resource_loader.cpp:325)
-ERROR: Can't open file from path 'res://assets/environment/trees/low_poly_pack/source/Background_Tree_Atlas_Opacity.png'.
-   at: get_file_as_bytes (core/io/file_access.cpp:907)
-WARNING: FBX: Image index '1' couldn't be loaded from path: res://assets/environment/trees/low_poly_pack/source/Background_Tree_Atlas_Opacity.png because there was no data to load. Skipping it.
-     at: _parse_images (modules/fbx/fbx_document.cpp:1081)
-ERROR: Resource file not found: res:// (expected type: Texture2D)
-   at: _load (core/io/resource_loader.cpp:325)
-ERROR: Can't open file from path 'res://assets/environment/trees/low_poly_pack/source/Background_Tree_Atlas_Normal.png'.
-   at: get_file_as_bytes (core/io/file_access.cpp:907)
-WARNING: FBX: Image index '2' couldn't be loaded from path: res://assets/environment/trees/low_poly_pack/source/Background_Tree_Atlas_Normal.png because there was no data to load. Skipping it.
-     at: _parse_images (modules/fbx/fbx_document.cpp:1081)
-ERROR: Resource file not found: res:// (expected type: Texture2D)
-   at: _load (core/io/resource_loader.cpp:325)
-ERROR: Can't open file from path 'res://assets/environment/trees/low_poly_pack/source/Background_Tree_Atlas_Roughness.png'.
-   at: get_file_as_bytes (core/io/file_access.cpp:907)
-WARNING: FBX: Image index '3' couldn't be loaded from path: res://assets/environment/trees/low_poly_pack/source/Background_Tree_Atlas_Roughness.png because there was no data to load. Skipping it.
-     at: _parse_images (modules/fbx/fbx_document.cpp:1081)
-ERROR: Resource file not found: res:// (expected type: Texture2D)
-   at: _load (core/io/resource_loader.cpp:325)
-ERROR: Can't open file from path 'res://assets/environment/trees/low_poly_pack/source/ROCKS_DIFFUSE.png'.
-   at: get_file_as_bytes (core/io/file_access.cpp:907)
-WARNING: FBX: Image index '4' couldn't be loaded from path: res://assets/environment/trees/low_poly_pack/source/ROCKS_DIFFUSE.png because there was no data to load. Skipping it.
-     at: _parse_images (modules/fbx/fbx_document.cpp:1081)
-ERROR: Resource file not found: res:// (expected type: Texture2D)
-   at: _load (core/io/resource_loader.cpp:325)
-ERROR: Can't open file from path 'res://assets/environment/trees/low_poly_pack/source/ROCKS_NORMALtest.png'.
-   at: get_file_as_bytes (core/io/file_access.cpp:907)
-WARNING: FBX: Image index '5' couldn't be loaded from path: res://assets/environment/trees/low_poly_pack/source/ROCKS_NORMALtest.png because there was no data to load. Skipping it.
-     at: _parse_images (modules/fbx/fbx_document.cpp:1081)
-ERROR: Resource file not found: res:// (expected type: Texture2D)
-   at: _load (core/io/resource_loader.cpp:325)
-ERROR: Can't open file from path 'res://assets/environment/trees/low_poly_pack/source/ROCKS_ROUGHNESS.png'.
-   at: get_file_as_bytes (core/io/file_access.cpp:907)
-WARNING: FBX: Image index '6' couldn't be loaded from path: res://assets/environment/trees/low_poly_pack/source/ROCKS_ROUGHNESS.png because there was no data to load. Skipping it.
-     at: _parse_images (modules/fbx/fbx_document.cpp:1081)
-ERROR: Resource file not found: res:// (expected type: Texture2D)
-   at: _load (core/io/resource_loader.cpp:325)
-ERROR: Can't open file from path 'res://assets/environment/trees/low_poly_pack/source/Tree_Branches_1_Diffuse.png'.
-   at: get_file_as_bytes (core/io/file_access.cpp:907)
-WARNING: FBX: Image index '7' couldn't be loaded from path: res://assets/environment/trees/low_poly_pack/source/Tree_Branches_1_Diffuse.png because there was no data to load. Skipping it.
-     at: _parse_images (modules/fbx/fbx_document.cpp:1081)
-ERROR: Resource file not found: res:// (expected type: Texture2D)
-   at: _load (core/io/resource_loader.cpp:325)
-ERROR: Can't open file from path 'res://assets/environment/trees/low_poly_pack/source/Tree_Branches_1_Opacity.png'.
-   at: get_file_as_bytes (core/io/file_access.cpp:907)
-WARNING: FBX: Image index '8' couldn't be loaded from path: res://assets/environment/trees/low_poly_pack/source/Tree_Branches_1_Opacity.png because there was no data to load. Skipping it.
-     at: _parse_images (modules/fbx/fbx_document.cpp:1081)
-ERROR: Resource file not found: res:// (expected type: Texture2D)
-   at: _load (core/io/resource_loader.cpp:325)
-ERROR: Can't open file from path 'res://assets/environment/trees/low_poly_pack/source/Tree_Branches_Normal.png'.
-   at: get_file_as_bytes (core/io/file_access.cpp:907)
-WARNING: FBX: Image index '9' couldn't be loaded from path: res://assets/environment/trees/low_poly_pack/source/Tree_Branches_Normal.png because there was no data to load. Skipping it.
-     at: _parse_images (modules/fbx/fbx_document.cpp:1081)
-ERROR: Resource file not found: res:// (expected type: Texture2D)
-   at: _load (core/io/resource_loader.cpp:325)
-ERROR: Can't open file from path 'res://assets/environment/trees/low_poly_pack/source/Tree_Branches_Roughness.png'.
-   at: get_file_as_bytes (core/io/file_access.cpp:907)
-WARNING: FBX: Image index '10' couldn't be loaded from path: res://assets/environment/trees/low_poly_pack/source/Tree_Branches_Roughness.png because there was no data to load. Skipping it.
-     at: _parse_images (modules/fbx/fbx_document.cpp:1081)
-ERROR: Resource file not found: res:// (expected type: Texture2D)
-   at: _load (core/io/resource_loader.cpp:325)
-ERROR: Can't open file from path 'res://assets/environment/trees/low_poly_pack/source/Tree_Branches_2_Diffuse.png'.
-   at: get_file_as_bytes (core/io/file_access.cpp:907)
-WARNING: FBX: Image index '11' couldn't be loaded from path: res://assets/environment/trees/low_poly_pack/source/Tree_Branches_2_Diffuse.png because there was no data to load. Skipping it.
-     at: _parse_images (modules/fbx/fbx_document.cpp:1081)
-ERROR: Resource file not found: res:// (expected type: Texture2D)
-   at: _load (core/io/resource_loader.cpp:325)
-ERROR: Can't open file from path 'res://assets/environment/trees/low_poly_pack/source/Tree_Branches_2_Opacity.png'.
-   at: get_file_as_bytes (core/io/file_access.cpp:907)
-WARNING: FBX: Image index '12' couldn't be loaded from path: res://assets/environment/trees/low_poly_pack/source/Tree_Branches_2_Opacity.png because there was no data to load. Skipping it.
-     at: _parse_images (modules/fbx/fbx_document.cpp:1081)
-ERROR: Resource file not found: res:// (expected type: Texture2D)
-   at: _load (core/io/resource_loader.cpp:325)
-ERROR: Can't open file from path 'res://assets/environment/trees/low_poly_pack/source/Tree_Trunk_01_Normal.png'.
-   at: get_file_as_bytes (core/io/file_access.cpp:907)
-WARNING: FBX: Image index '13' couldn't be loaded from path: res://assets/environment/trees/low_poly_pack/source/Tree_Trunk_01_Normal.png because there was no data to load. Skipping it.
-     at: _parse_images (modules/fbx/fbx_document.cpp:1081)
-ERROR: Resource file not found: res:// (expected type: Texture2D)
-   at: _load (core/io/resource_loader.cpp:325)
-ERROR: Can't open file from path 'res://assets/environment/trees/low_poly_pack/source/Tree_Trunk_01_Roughness.png'.
-   at: get_file_as_bytes (core/io/file_access.cpp:907)
-WARNING: FBX: Image index '14' couldn't be loaded from path: res://assets/environment/trees/low_poly_pack/source/Tree_Trunk_01_Roughness.png because there was no data to load. Skipping it.
-     at: _parse_images (modules/fbx/fbx_document.cpp:1081)
-ERROR: Resource file not found: res:// (expected type: Texture2D)
-   at: _load (core/io/resource_loader.cpp:325)
-ERROR: Can't open file from path 'res://assets/environment/trees/low_poly_pack/source/Tree_Trunk_02_Normal.png'.
-   at: get_file_as_bytes (core/io/file_access.cpp:907)
-WARNING: FBX: Image index '15' couldn't be loaded from path: res://assets/environment/trees/low_poly_pack/source/Tree_Trunk_02_Normal.png because there was no data to load. Skipping it.
-     at: _parse_images (modules/fbx/fbx_document.cpp:1081)
-ERROR: Resource file not found: res:// (expected type: Texture2D)
-   at: _load (core/io/resource_loader.cpp:325)
-ERROR: Can't open file from path 'res://assets/environment/trees/low_poly_pack/source/Tree_Trunk_02_Roughness.png'.
-   at: get_file_as_bytes (core/io/file_access.cpp:907)
-WARNING: FBX: Image index '16' couldn't be loaded from path: res://assets/environment/trees/low_poly_pack/source/Tree_Trunk_02_Roughness.png because there was no data to load. Skipping it.
-     at: _parse_images (modules/fbx/fbx_document.cpp:1081)
-[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
-[  99% ] [90m[1mimport[22m | Saving...[39m[0m
-[92m[ DONE ][39m [1mimport[22m
-[0m
-[  99% ] [90m[1mreimport[22m | Finalizing Asset Import...[39m[0m
-[92m[ DONE ][39m [1mreimport[22m
-[0m
-[   0% ] [90m[1mreimport[22m | Started (Re)Importing Assets (227 steps)[39m[0m
-[   0% ] [90m[1mreimport[22m | Executing post-reimport operations...[39m[0m
-[92m[ DONE ][39m [1mreimport[22m
-[0m
-[   0% ] [90m[1mloading_editor_layout[22m | Started Loading editor (5 steps)[39m[0m
-[   0% ] [90m[1mloading_editor_layout[22m | Loading editor layout...[39m[0m
-[  16% ] [90m[1mloading_editor_layout[22m | Loading docks...[39m[0m
-[92m[ DONE ][39m [1mloading_editor_layout[22m
-[0m
-cannot connect to daemon at tcp:5037: Connection refused
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
+ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+   at: add_surface (scene/resources/mesh.cpp:1784)
 ```
 
 ## Main-menu smoke
 ```text
-Skipped because import failed.
 ```
 
 ## Gameplay smoke
 ```text
-Skipped because import failed.
 ```
 
 ## Floor/tree physics
 ```text
-Skipped because import failed.
 ```
 
 ## Asset inspector
 ```text
-Skipped because import failed.
 ```
