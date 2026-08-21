@@ -9,7 +9,6 @@ config/features=PackedStringArray("4.7", "Mobile")
 
 [autoload]
 GameState="*res://scripts/core/game_state.gd"
-SaveSystem="*res://scripts/core/save_system.gd"
 Settings="*res://scripts/core/settings.gd"
 InputState="*res://scripts/input/input_state.gd"
 AudioDirector="*res://scripts/audio/audio_director.gd"
