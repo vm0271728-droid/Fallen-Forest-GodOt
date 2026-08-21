@@ -9,10 +9,14 @@ const WAKE_UP_SEQUENCE := preload("res://scripts/cinematics/wake_up_sequence.gd"
 func _ready() -> void:
 	await get_tree().process_frame
 
-	if terrain != null and terrain.has_method("generate") and not bool(terrain.get("generated")):
+	if not is_instance_valid(player):
+		push_error("Fallen Forest: player node missing.")
+		return
+
+	if is_instance_valid(terrain) and terrain.has_method("generate") and not bool(terrain.get("generated")):
 		terrain.call("generate")
 
-	if terrain != null and terrain.has_method("sample_height"):
+	if is_instance_valid(terrain) and terrain.has_method("sample_height"):
 		var height := float(terrain.call("sample_height", 0.0, 0.0))
 		player.global_position = Vector3(0.0, height + 0.06, 0.0)
 
@@ -22,6 +26,8 @@ func _ready() -> void:
 	call_deferred("_play_fresh_run_wake_up")
 
 func _play_fresh_run_wake_up() -> void:
+	if not is_instance_valid(player):
+		return
 	var wake := WAKE_UP_SEQUENCE.new()
 	wake.name = "WakeUpSequence_Runtime"
 	add_child(wake)
