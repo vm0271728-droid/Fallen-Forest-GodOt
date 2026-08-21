@@ -2,7 +2,7 @@
 
 - Engine: Godot 4.7.1 stable
 - Branch: `main`
-- Tested commit: `f6faa3c9724c3a23bf9d9fbc4ca63217ca79a52b`
+- Tested commit: `08872cab5fa629d37446e02c8184657e2ae33c91`
 - Required minimum: Android 11 / API 30
 - Required ABI: arm64-v8a only
 - Import exit code: `999`
