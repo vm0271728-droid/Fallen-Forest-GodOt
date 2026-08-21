@@ -1,8 +1,8 @@
 # Fast Godot script validation
 
 - Engine: Godot 4.7.1 stable
-- Branch: `fix/android11-integrity`
-- Tested commit: `a43411642f843722354ac72a95f60fd22b3655b7`
+- Branch: `main`
+- Tested commit: `23deb4a227407db5c97f6874a49f08ebc8dc942b`
 - Exit code: `0`
 - Result: **PASS**
 
