@@ -2,7 +2,7 @@
 
 - Engine: Godot 4.7.1 stable
 - Branch: `main`
-- Tested commit: `dd6373e327c0ff7eae8ffc0c8cd812c4a1e7c01b`
+- Tested commit: `ffbca89aeaca1696e0d097b79e62ba83f02f5265`
 - Required minimum: Android 11 / API 30
 - Required ABI: arm64-v8a only
 - Import exit code: `1`
@@ -14,6 +14,7 @@
 
 ## Import log tail
 ```text
+ERROR: Resource file not found: res:// (expected type: Texture2D)
    at: _load (core/io/resource_loader.cpp:325)
 ERROR: Can't open file from path 'res://assets/environment/trees/low_poly_pack/source/Background_Tree_Atlas_Roughness.png'.
    at: get_file_as_bytes (core/io/file_access.cpp:907)
@@ -113,7 +114,6 @@ WARNING: FBX: Image index '16' couldn't be loaded from path: res://assets/enviro
 [  16% ] [90m[1mloading_editor_layout[22m | Loading docks...[39m[0m
 [92m[ DONE ][39m [1mloading_editor_layout[22m
 [0m
-cannot connect to daemon at tcp:5037: Connection refused
 ```
 
 ## Export log tail
@@ -122,6 +122,6 @@ cannot connect to daemon at tcp:5037: Connection refused
 
 ## APK badging
 ```text
-09-08 06:17:29.837  2794  2794 W asset   : Asset path Builds/Android/FallenForest-debug.apk is neither a directory nor file (type=1).
+09-08 06:26:30.801  2831  2831 W asset   : Asset path Builds/Android/FallenForest-debug.apk is neither a directory nor file (type=1).
 ERROR: dump failed because assets could not be loaded
 ```
