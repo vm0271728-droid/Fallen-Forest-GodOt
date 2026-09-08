@@ -2,7 +2,7 @@
 
 - Engine: Godot 4.7.1 stable
 - Branch: `main`
-- Tested commit: `ba9c9be4b40234955b5efb054ed63dfa2b743d15`
+- Tested commit: `ffbca89aeaca1696e0d097b79e62ba83f02f5265`
 - Full asset import exit code: `1`
 - Main-menu smoke-test exit code: `0`
 - Gameplay smoke-test exit code: `0`
@@ -13,18 +13,24 @@
 
 ## MAX_MESH_SURFACES context
 ```text
-757-     at: _parse_material_library (editor/import/3d/resource_importer_obj.cpp:60)
-758-WARNING: OBJ: Ambient light for material 'nature_bark_fir_05_m_0001.jpg' is ignored in PBR
-759-     at: _parse_material_library (editor/import/3d/resource_importer_obj.cpp:60)
-760-WARNING: OBJ: Ambient light for material 'nature_bark_fir_02_m_0001.jpg' is ignored in PBR
-761-     at: _parse_material_library (editor/import/3d/resource_importer_obj.cpp:60)
-762-[  92% ] [90m[1mreimport[22m | firs.obj[39m[0m
-763-WARNING: OBJ: Ambient light for material 'nature_bark_fir_07_m_0001.jpg' is ignored in PBR
-764-     at: _parse_material_library (editor/import/3d/resource_importer_obj.cpp:60)
-765-WARNING: OBJ: Ambient light for material 'nature_bark_fir_05_m_0001.jpg' is ignored in PBR
-766-     at: _parse_material_library (editor/import/3d/resource_importer_obj.cpp:60)
-767-WARNING: OBJ: Ambient light for material 'nature_bark_fir_02_m_0001.jpg' is ignored in PBR
-768-     at: _parse_material_library (editor/import/3d/resource_importer_obj.cpp:60)
+751-     at: _parse_material_library (editor/import/3d/resource_importer_obj.cpp:60)
+752-WARNING: OBJ: Ambient light for material 'nature_bark_fir_05_m_0001.jpg' is ignored in PBR
+753-     at: _parse_material_library (editor/import/3d/resource_importer_obj.cpp:60)
+754-WARNING: OBJ: Ambient light for material 'nature_bark_fir_02_m_0001.jpg' is ignored in PBR
+755-     at: _parse_material_library (editor/import/3d/resource_importer_obj.cpp:60)
+756-[  92% ] [90m[1mreimport[22m | firs.obj[39m[0m
+757-WARNING: OBJ: Ambient light for material 'nature_bark_fir_07_m_0001.jpg' is ignored in PBR
+758-     at: _parse_material_library (editor/import/3d/resource_importer_obj.cpp:60)
+759-WARNING: OBJ: Ambient light for material 'nature_bark_fir_05_m_0001.jpg' is ignored in PBR
+760-     at: _parse_material_library (editor/import/3d/resource_importer_obj.cpp:60)
+761-WARNING: OBJ: Ambient light for material 'nature_bark_fir_02_m_0001.jpg' is ignored in PBR
+762-     at: _parse_material_library (editor/import/3d/resource_importer_obj.cpp:60)
+763:ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+764-   at: add_surface (scene/resources/mesh.cpp:1784)
+765:ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+766-   at: add_surface (scene/resources/mesh.cpp:1784)
+767:ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
+768-   at: add_surface (scene/resources/mesh.cpp:1784)
 769:ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
 770-   at: add_surface (scene/resources/mesh.cpp:1784)
 771:ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
@@ -707,12 +713,6 @@
 1448-   at: add_surface (scene/resources/mesh.cpp:1784)
 1449:ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
 1450-   at: add_surface (scene/resources/mesh.cpp:1784)
-1451:ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
-1452-   at: add_surface (scene/resources/mesh.cpp:1784)
-1453:ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
-1454-   at: add_surface (scene/resources/mesh.cpp:1784)
-1455:ERROR: Condition "surfaces.size() == RenderingServerEnums::MAX_MESH_SURFACES" is true.
-1456-   at: add_surface (scene/resources/mesh.cpp:1784)
 ```
 
 ## Last imported resources
