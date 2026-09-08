@@ -2,7 +2,7 @@
 
 - Engine: Godot 4.7.1 stable
 - Branch: `main`
-- Tested commit: `88b389c34ee62f45fdb909c556a485442562136a`
+- Tested commit: `ba9c9be4b40234955b5efb054ed63dfa2b743d15`
 - Full asset import exit code: `1`
 - Main-menu smoke-test exit code: `0`
 - Gameplay smoke-test exit code: `0`
@@ -781,7 +781,6 @@
 
 ## Import log tail
 ```text
-[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
 [   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
 ERROR: Resource file not found: res:// (expected type: Texture2D)
    at: _load (core/io/resource_loader.cpp:325)
@@ -901,6 +900,7 @@ WARNING: FBX: Image index '16' couldn't be loaded from path: res://assets/enviro
 [  16% ] [90m[1mloading_editor_layout[22m | Loading docks...[39m[0m
 [92m[ DONE ][39m [1mloading_editor_layout[22m
 [0m
+cannot connect to daemon at tcp:5037: Connection refused
 ```
 
 ## Main-menu smoke
