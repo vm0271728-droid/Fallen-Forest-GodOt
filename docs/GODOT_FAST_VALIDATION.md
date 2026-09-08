@@ -2,7 +2,7 @@
 
 - Engine: Godot 4.7.1 stable
 - Branch: `main`
-- Tested commit: `b2a0c5b6857a130a25846de768dd6018131ef7b6`
+- Tested commit: `ba9c9be4b40234955b5efb054ed63dfa2b743d15`
 - Exit code: `1`
 - Result: **FAIL**
 
@@ -15,6 +15,42 @@ ERROR: Failed to load script "res://scripts/core/scene_flow.gd" with error "Pars
    at: load (modules/gdscript/gdscript_resource_format.cpp:46)
 ERROR: Failed to instantiate an autoload, script 'res://scripts/core/scene_flow.gd' does not inherit from 'Node'.
    at: start (main/main.cpp:4535)
+SCRIPT ERROR: Parse Error: Identifier "SaveSystem" not declared in the current scope.
+          at: GDScript::reload (res://scripts/horror/locust_death_controller.gd:71)
+          GDScript backtrace (most recent call first):
+              [0] _scan_dir (res://tools/fast_validate_scripts.gd:38)
+              [1] _scan_dir (res://tools/fast_validate_scripts.gd:31)
+              [2] _initialize (res://tools/fast_validate_scripts.gd:6)
+SCRIPT ERROR: Parse Error: Identifier "SaveSystem" not declared in the current scope.
+          at: GDScript::reload (res://scripts/horror/locust_death_controller.gd:72)
+          GDScript backtrace (most recent call first):
+              [0] _scan_dir (res://tools/fast_validate_scripts.gd:38)
+              [1] _scan_dir (res://tools/fast_validate_scripts.gd:31)
+              [2] _initialize (res://tools/fast_validate_scripts.gd:6)
+SCRIPT ERROR: Parse Error: Identifier "SaveSystem" not declared in the current scope.
+          at: GDScript::reload (res://scripts/horror/locust_death_controller.gd:73)
+          GDScript backtrace (most recent call first):
+              [0] _scan_dir (res://tools/fast_validate_scripts.gd:38)
+              [1] _scan_dir (res://tools/fast_validate_scripts.gd:31)
+              [2] _initialize (res://tools/fast_validate_scripts.gd:6)
+SCRIPT ERROR: Parse Error: Identifier "SaveSystem" not declared in the current scope.
+          at: GDScript::reload (res://scripts/horror/locust_death_controller.gd:74)
+          GDScript backtrace (most recent call first):
+              [0] _scan_dir (res://tools/fast_validate_scripts.gd:38)
+              [1] _scan_dir (res://tools/fast_validate_scripts.gd:31)
+              [2] _initialize (res://tools/fast_validate_scripts.gd:6)
+SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
+          at: GDScript::reload (res://scripts/horror/event_director.gd:0)
+          GDScript backtrace (most recent call first):
+              [0] _scan_dir (res://tools/fast_validate_scripts.gd:38)
+              [1] _scan_dir (res://tools/fast_validate_scripts.gd:31)
+              [2] _initialize (res://tools/fast_validate_scripts.gd:6)
+ERROR: Failed to load script "res://scripts/horror/event_director.gd" with error "Compilation failed".
+   at: load (modules/gdscript/gdscript_resource_format.cpp:46)
+   GDScript backtrace (most recent call first):
+       [0] _scan_dir (res://tools/fast_validate_scripts.gd:38)
+       [1] _scan_dir (res://tools/fast_validate_scripts.gd:31)
+       [2] _initialize (res://tools/fast_validate_scripts.gd:6)
 SCRIPT ERROR: Parse Error: Identifier "SaveSystem" not declared in the current scope.
           at: GDScript::reload (res://scripts/horror/boiled_one.gd:48)
           GDScript backtrace (most recent call first):
@@ -57,43 +93,31 @@ SCRIPT ERROR: Parse Error: Identifier "SaveSystem" not declared in the current s
               [0] _scan_dir (res://tools/fast_validate_scripts.gd:38)
               [1] _scan_dir (res://tools/fast_validate_scripts.gd:31)
               [2] _initialize (res://tools/fast_validate_scripts.gd:6)
-SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
-          at: GDScript::reload (res://scripts/horror/event_director.gd:0)
-          GDScript backtrace (most recent call first):
-              [0] _scan_dir (res://tools/fast_validate_scripts.gd:38)
-              [1] _scan_dir (res://tools/fast_validate_scripts.gd:31)
-              [2] _initialize (res://tools/fast_validate_scripts.gd:6)
-ERROR: Failed to load script "res://scripts/horror/event_director.gd" with error "Compilation failed".
+ERROR: Failed to load script "res://scripts/horror/locust_death_controller.gd" with error "Parse error".
    at: load (modules/gdscript/gdscript_resource_format.cpp:46)
    GDScript backtrace (most recent call first):
        [0] _scan_dir (res://tools/fast_validate_scripts.gd:38)
        [1] _scan_dir (res://tools/fast_validate_scripts.gd:31)
        [2] _initialize (res://tools/fast_validate_scripts.gd:6)
 SCRIPT ERROR: Parse Error: Identifier "SaveSystem" not declared in the current scope.
-          at: GDScript::reload (res://scripts/horror/locust_death_controller.gd:71)
+          at: GDScript::reload (res://scripts/documents/document_pickup.gd:51)
           GDScript backtrace (most recent call first):
               [0] _scan_dir (res://tools/fast_validate_scripts.gd:38)
               [1] _scan_dir (res://tools/fast_validate_scripts.gd:31)
               [2] _initialize (res://tools/fast_validate_scripts.gd:6)
+ERROR: Failed to load script "res://scripts/documents/document_pickup.gd" with error "Parse error".
+   at: load (modules/gdscript/gdscript_resource_format.cpp:46)
+   GDScript backtrace (most recent call first):
+       [0] _scan_dir (res://tools/fast_validate_scripts.gd:38)
+       [1] _scan_dir (res://tools/fast_validate_scripts.gd:31)
+       [2] _initialize (res://tools/fast_validate_scripts.gd:6)
 SCRIPT ERROR: Parse Error: Identifier "SaveSystem" not declared in the current scope.
-          at: GDScript::reload (res://scripts/horror/locust_death_controller.gd:72)
+          at: GDScript::reload (res://scripts/core/scene_flow.gd:11)
           GDScript backtrace (most recent call first):
               [0] _scan_dir (res://tools/fast_validate_scripts.gd:38)
               [1] _scan_dir (res://tools/fast_validate_scripts.gd:31)
               [2] _initialize (res://tools/fast_validate_scripts.gd:6)
-SCRIPT ERROR: Parse Error: Identifier "SaveSystem" not declared in the current scope.
-          at: GDScript::reload (res://scripts/horror/locust_death_controller.gd:73)
-          GDScript backtrace (most recent call first):
-              [0] _scan_dir (res://tools/fast_validate_scripts.gd:38)
-              [1] _scan_dir (res://tools/fast_validate_scripts.gd:31)
-              [2] _initialize (res://tools/fast_validate_scripts.gd:6)
-SCRIPT ERROR: Parse Error: Identifier "SaveSystem" not declared in the current scope.
-          at: GDScript::reload (res://scripts/horror/locust_death_controller.gd:74)
-          GDScript backtrace (most recent call first):
-              [0] _scan_dir (res://tools/fast_validate_scripts.gd:38)
-              [1] _scan_dir (res://tools/fast_validate_scripts.gd:31)
-              [2] _initialize (res://tools/fast_validate_scripts.gd:6)
-ERROR: Failed to load script "res://scripts/horror/locust_death_controller.gd" with error "Parse error".
+ERROR: Failed to load script "res://scripts/core/scene_flow.gd" with error "Parse error".
    at: load (modules/gdscript/gdscript_resource_format.cpp:46)
    GDScript backtrace (most recent call first):
        [0] _scan_dir (res://tools/fast_validate_scripts.gd:38)
@@ -118,30 +142,6 @@ SCRIPT ERROR: Parse Error: Identifier "SaveSystem" not declared in the current s
               [1] _scan_dir (res://tools/fast_validate_scripts.gd:31)
               [2] _initialize (res://tools/fast_validate_scripts.gd:6)
 ERROR: Failed to load script "res://scripts/player/flashlight_rig.gd" with error "Parse error".
-   at: load (modules/gdscript/gdscript_resource_format.cpp:46)
-   GDScript backtrace (most recent call first):
-       [0] _scan_dir (res://tools/fast_validate_scripts.gd:38)
-       [1] _scan_dir (res://tools/fast_validate_scripts.gd:31)
-       [2] _initialize (res://tools/fast_validate_scripts.gd:6)
-SCRIPT ERROR: Parse Error: Identifier "SaveSystem" not declared in the current scope.
-          at: GDScript::reload (res://scripts/core/scene_flow.gd:11)
-          GDScript backtrace (most recent call first):
-              [0] _scan_dir (res://tools/fast_validate_scripts.gd:38)
-              [1] _scan_dir (res://tools/fast_validate_scripts.gd:31)
-              [2] _initialize (res://tools/fast_validate_scripts.gd:6)
-ERROR: Failed to load script "res://scripts/core/scene_flow.gd" with error "Parse error".
-   at: load (modules/gdscript/gdscript_resource_format.cpp:46)
-   GDScript backtrace (most recent call first):
-       [0] _scan_dir (res://tools/fast_validate_scripts.gd:38)
-       [1] _scan_dir (res://tools/fast_validate_scripts.gd:31)
-       [2] _initialize (res://tools/fast_validate_scripts.gd:6)
-SCRIPT ERROR: Parse Error: Identifier "SaveSystem" not declared in the current scope.
-          at: GDScript::reload (res://scripts/documents/document_pickup.gd:51)
-          GDScript backtrace (most recent call first):
-              [0] _scan_dir (res://tools/fast_validate_scripts.gd:38)
-              [1] _scan_dir (res://tools/fast_validate_scripts.gd:31)
-              [2] _initialize (res://tools/fast_validate_scripts.gd:6)
-ERROR: Failed to load script "res://scripts/documents/document_pickup.gd" with error "Parse error".
    at: load (modules/gdscript/gdscript_resource_format.cpp:46)
    GDScript backtrace (most recent call first):
        [0] _scan_dir (res://tools/fast_validate_scripts.gd:38)
