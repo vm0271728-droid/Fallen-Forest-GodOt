@@ -27,8 +27,9 @@ window/handheld/orientation=0
 3d/default_gravity=22.0
 
 [rendering]
-renderer/rendering_method="mobile"
-renderer/rendering_method.mobile="mobile"
+# Compatibility is supported on a wider range of Android 11+ devices and avoids startup exits on devices without a usable Vulkan mobile driver.
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
 textures/default_filters/use_nearest_mipmap_filter=false
 
 [debug]
